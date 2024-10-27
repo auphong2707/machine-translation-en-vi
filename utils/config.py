@@ -5,7 +5,7 @@ DEBUG = False                       # Set to True to enable debugging features
 SEED = 42                           # Random seed for reproducibility
 
 # Data paths
-DATA_DIR = "data/preprocessed"      # Path to the dataset directory
+DATA_DIR = "data/preprocessed/"      # Path to the dataset directory
 TRAIN_DATA = DATA_DIR + "train.txt" # Path to training data
 VALID_DATA = DATA_DIR + "val.txt"   # Path to validation data
 TEST_DATA = DATA_DIR + "test.txt"   # Path to test data
