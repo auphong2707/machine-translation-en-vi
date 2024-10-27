@@ -1,9 +1,12 @@
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler
-from config import PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, VOCAB_SIZE, MAX_SEQ_LENGTH, DEVICE
 from utils import preprocess_data_csv
 import json
+
+import sys
+sys.path.append('../machine-translation-en-vi')
+from config import *
 
 # [LANGUAGE VOCABULARY]
 class Lang:

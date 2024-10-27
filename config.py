@@ -1,3 +1,4 @@
+import torch
 # config.py
 
 # General settings
@@ -14,9 +15,9 @@ SAVE_MODEL_PATH = "models/"         # Where to save models
 # Text preprocessing
 MAX_SEQ_LENGTH = 50                 # Maximum length of input/output sequences
 VOCAB_SIZE = 10000                  # Maximum vocabulary size
-PAD_TOKEN = "<PAD>"                 # Padding token
-SOS_TOKEN = "<SOS>"                 # Start-of-sequence token
-EOS_TOKEN = "<EOS>"                 # End-of-sequence token
+PAD_TOKEN = 0                       # Padding token
+SOS_TOKEN = 1                       # Start-of-sequence token
+EOS_TOKEN = 2                       # End-of-sequence token
 UNK_TOKEN = "<UNK>"                 # Unknown token
 
 # Model architecture parameters
@@ -37,7 +38,7 @@ TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in de
 # Hardware settings
 USE_GPU = True                      # Use GPU if available
 NUM_WORKERS = 4                     # Number of data loading workers
-DEVICE = "cuda" if USE_GPU else "cpu"
+DEVICE = "cuda" if USE_GPU and torch.cuda.is_available() else "cpu"
 
 # Logging and checkpointing
 CHECKPOINT_PATH = "checkpoints/"    # Path to save checkpoints

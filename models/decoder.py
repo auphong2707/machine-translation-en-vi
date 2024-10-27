@@ -1,29 +1,26 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
-from config import DEVICE, MAX_SEQ_LENGTH, SOS_token
+import torch.nn.functional as F
+
+import sys
+sys.path.append('../machine-translation-en-vi')
+from config import *
 
 class DecoderRNN(nn.Module):
-    def __init__(self, hidden_size, output_size, num_layers=1, bidirectional=True):
+    def __init__(self, hidden_size, output_size, num_layers=1):
         super(DecoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.bidirectional = bidirectional
-        self.num_directions = 2 if bidirectional else 1
-        self.effective_hidden_size = hidden_size * self.num_directions
         
-        self.embedding = nn.Embedding(output_size, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size, num_layers=num_layers, bidirectional=bidirectional, batch_first=True)
-        self.out = nn.Linear(self.effective_hidden_size, output_size)
+        self.embedding = nn.Embedding(output_size, hidden_size).to(DEVICE)
+        self.gru = nn.GRU(hidden_size, hidden_size, num_layers=num_layers, batch_first=True).to(DEVICE)
+        self.out = nn.Linear(self.hidden_size, output_size).to(DEVICE)
         
     def forward(self, encoder_outputs, encoder_hidden, target_tensor=None):
         batch_size = encoder_outputs.size(0)
-        decoder_input = torch.empty(batch_size, 1, dtype=torch.long, device=DEVICE).fill_(SOS_token)
+        decoder_input = torch.empty(batch_size, 1, dtype=torch.long, device=DEVICE).fill_(SOS_TOKEN)
 
-        if self.bidirectional:
-            decoder_hidden = self._init_bidirectional_hidden(encoder_hidden)
-        else:
-            decoder_hidden = encoder_hidden[:self.num_layers]
+        decoder_hidden = encoder_hidden[:self.num_layers]
             
         decoder_outputs = []
         
@@ -31,7 +28,7 @@ class DecoderRNN(nn.Module):
             decoder_output, decoder_hidden = self.forward_step(decoder_input, decoder_hidden)
             decoder_outputs.append(decoder_output)
             
-            if target_tensor:
+            if target_tensor is not None:
                 decoder_input = target_tensor[:, i].unsqueeze(1)
             else:
                 _, topi = decoder_output.topk(1)
@@ -42,17 +39,11 @@ class DecoderRNN(nn.Module):
         return decoder_outputs, decoder_hidden, None 
     
     def forward_step(self, input, hidden):
-        output = self.embedding(input)
+        output = self.embedding(input).to(DEVICE)
         output = F.relu(output)
         output, hidden = self.gru(output, hidden)
         output = self.out(output)
         return output, hidden
-    
-    def _init_bidirectional_hidden(self, encoder_hidden):
-        forward_hidden = encoder_hidden[0::2]
-        backward_hidden = encoder_hidden[1::2]
-        combined_hidden = torch.cat((forward_hidden, backward_hidden), dim=2)
-        return combined_hidden
                
 
 class BahdanauAttention(nn.Module):
@@ -83,7 +74,7 @@ class DecoderAttnRNN(nn.Module):
     def forward(self, encoder_outputs, encoder_hidden, target_tensor=None):
         batch_size = encoder_outputs.size(0)
         decoder_input = torch.empty(batch_size, 1, dtype=torch.long, 
-                                    device=DEVICE).fill_(SOS_token)
+                                    device=DEVICE).fill_(SOS_TOKEN)
         decoder_input = encoder_hidden
         decoder_outputs = []
         attentions = []
@@ -120,3 +111,18 @@ class DecoderAttnRNN(nn.Module):
         output = self.out(output)
         
         return output, hidden, attn_weights
+    
+if __name__ == "__main__":
+    hidden_size = 256
+    output_size = 10
+    num_layers = 2
+
+    decoder = DecoderRNN(hidden_size, output_size, num_layers)
+
+    encoder_outputs = torch.randn(5, 10, hidden_size * 2).to(DEVICE)  # batch_size x seq_len x hidden_size*2
+    encoder_hidden = torch.randn(num_layers * 2, 5, hidden_size).to(DEVICE)  # num_layers*2 x batch_size x hidden_size
+
+    decoder_outputs, decoder_hidden, _ = decoder(encoder_outputs, encoder_hidden)
+
+    print("Decoder outputs shape:", decoder_outputs.shape)
+    print("Decoder hidden shape:", decoder_hidden.shape)
