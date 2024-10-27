@@ -1,5 +1,8 @@
-from ..utils.config import VOCAB_SIZE, SOS_TOKEN, EOS_TOKEN, MAX_SEQ_LENGTH
-from ..utils.utils import preprocess_data_csv
+import numpy as np
+import torch
+from torch.utils.data import TensorDataset, DataLoader, RandomSampler
+from config import PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, VOCAB_SIZE, MAX_SEQ_LENGTH, DEVICE
+from utils import preprocess_data_csv
 import json
 
 # [LANGUAGE VOCABULARY]
@@ -8,8 +11,12 @@ class Lang:
         self.name = name
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {0: SOS_TOKEN, 1: EOS_TOKEN}
-        self.n_words = 2  # Count SOS and EOS
+        self.index2word = {
+            PAD_TOKEN: "<PAD>",
+            SOS_TOKEN: "<SOS>",
+            EOS_TOKEN: "<EOS>"
+        }
+        self.n_words = 3  # Count PAD, SOS and EOS
 
     def add_sentence(self, sentence):
         for word in sentence.split(' '):
@@ -88,8 +95,7 @@ def filter_pairs(pairs, max_length):
     """
     
     def filter_pair(p, max_length):
-        return len(p[0].split(' ')) < max_length and \
-            len(p[1].split(' ')) < max_length
+        return len(p[0].split(' ')) <= max_length and len(p[1].split(' ')) <= max_length
     
     return [pair for pair in pairs if filter_pair(pair, max_length)]
 
@@ -113,7 +119,42 @@ def prepare_data(dir, lang1='en', lang2='vi', reverse=False):
 
 # [DATALOADER]
 
+def indexes_from_sentence(lang, sentence):
+    return [lang.word2index[word] for word in sentence.split(' ')]
+
+def get_dataloader(dir, batch_size):
+    input_lang, output_lang, pairs = prepare_data(dir)
+    
+    n = len(pairs)
+    input_ids = np.zeros((n, MAX_SEQ_LENGTH + 2), dtype=np.int32)
+    target_ids = np.zeros((n, MAX_SEQ_LENGTH + 2), dtype=np.int32)
+
+    for idx, (inp, tgt) in enumerate(pairs):
+        inp_ids = [SOS_TOKEN] + indexes_from_sentence(input_lang, inp) + [EOS_TOKEN]
+        tgt_ids = [SOS_TOKEN] + indexes_from_sentence(output_lang, tgt) + [EOS_TOKEN]
+        
+        input_ids[idx, :len(inp_ids)] = inp_ids
+        target_ids[idx, :len(tgt_ids)] = tgt_ids
+
+    train_data = TensorDataset(torch.LongTensor(input_ids).to(DEVICE),
+                               torch.LongTensor(target_ids).to(DEVICE))
+
+    train_sampler = RandomSampler(train_data)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
+    return input_lang, output_lang, train_dataloader
+
 if __name__ == "__main__":
-    input_lang, output_lang, pairs = prepare_data('data/raw/train.csv')
-    print(input_lang.get_vocabulary())
-    print(output_lang.get_vocabulary())
+    from pprint import pprint
+    input_lang, output_lang, train_dataloader = get_dataloader('data/raw/test.csv', 2)
+    for batch in train_dataloader:
+        pprint(batch)
+        break
+    
+    for batch in train_dataloader:
+        input_batch, target_batch = batch
+        for i in range(input_batch.size(0)):
+            input_sentence = ' '.join([input_lang.index2word[idx.item()] for idx in input_batch[i] if idx.item() in input_lang.index2word])
+            target_sentence = ' '.join([output_lang.index2word[idx.item()] for idx in target_batch[i] if idx.item() in output_lang.index2word])
+            print(f"Input: {input_sentence}")
+            print(f"Target: {target_sentence}")
+        break
