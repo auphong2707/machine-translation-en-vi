@@ -2,9 +2,12 @@ import os
 import torch
 import numpy as np
 import random
-import re
-import pandas as pd
+from torch import Tensor
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+
+import sys
+sys.path.append('../machine-translation-en-vi')
+from config import *
 
 def set_seed(seed=42):
     """Set random seed for reproducibility across numpy, random, and torch.
