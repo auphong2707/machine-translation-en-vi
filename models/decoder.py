@@ -7,9 +7,9 @@ import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
 
-class DecoderRNN(nn.Module):
+class DecoderGRU(nn.Module):
     def __init__(self, embedding_size, hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio):
-        super(DecoderRNN, self).__init__()
+        super(DecoderGRU, self).__init__()
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
         self.output_size = output_size
@@ -119,7 +119,7 @@ class DecoderAttnRNN(nn.Module):
     
 if __name__ == "__main__":
 
-    decoder = DecoderRNN(EMBEDDING_SIZE, HIDDEN_SIZE, VOCAB_SIZE, DROPOUT_RATE, NUM_LAYERS * 2).to(DEVICE)
+    decoder = DecoderGRU(EMBEDDING_SIZE, HIDDEN_SIZE, VOCAB_SIZE, DROPOUT_RATE, NUM_LAYERS * 2).to(DEVICE)
     
     encoder_outputs = torch.randn(MAX_SEQ_LENGTH, BATCH_SIZE, HIDDEN_SIZE * 2).to(DEVICE)
     encoder_hidden = torch.randn(NUM_LAYERS * 2, BATCH_SIZE, HIDDEN_SIZE).to(DEVICE)

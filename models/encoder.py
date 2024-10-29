@@ -5,11 +5,11 @@ import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
 
-class EncoderRNN(nn.Module):
+class EncoderGRU(nn.Module):
     def __init__(self, input_size, embedding_size, hidden_size, 
                  num_layers, dropout_rate, bidirectional):
         
-        super(EncoderRNN, self).__init__()
+        super(EncoderGRU, self).__init__()
         self.input_size = input_size
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
@@ -46,7 +46,7 @@ class EncoderRNN(nn.Module):
     
 if __name__ == "__main__":
 
-    encoder = EncoderRNN(
+    encoder = EncoderGRU(
         input_size=VOCAB_SIZE,
         embedding_size=EMBEDDING_SIZE,
         hidden_size=HIDDEN_SIZE,

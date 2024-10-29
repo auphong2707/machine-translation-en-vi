@@ -1,12 +1,12 @@
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler
-from utils import preprocess_data_csv
 import json
 
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
+from helper import preprocess_data_csv
 
 # [LANGUAGE VOCABULARY]
 class Lang:
@@ -17,9 +17,10 @@ class Lang:
         self.index2word = {
             PAD_TOKEN: "<PAD>",
             SOS_TOKEN: "<SOS>",
-            EOS_TOKEN: "<EOS>"
+            EOS_TOKEN: "<EOS>",
+            UNK_TOKEN: "<UNK>"
         }
-        self.n_words = 3  # Count PAD, SOS and EOS
+        self.n_words = 4  # Count PAD, SOS, EOS, UNK
 
     def add_sentence(self, sentence):
         for word in sentence.split(' '):
@@ -34,59 +35,44 @@ class Lang:
         else:
             self.word2count[word] += 1
     
-    def get_vocabulary(self):
-        # Sort words by frequency (high to low) and take the top max_words
+    def trim_lang(self, max_vocab_size=VOCAB_SIZE):
+        """Trims the vocabulary to retain only the most frequent words up to max_vocab_size."""
+        # Sort words by frequency (high to low)
         sorted_words = sorted(self.word2count.items(), key=lambda item: item[1], reverse=True)
-        limited_vocab = sorted_words[:VOCAB_SIZE]
 
-        # Create a dictionary with the token as key and index as value
-        vocab = {word: self.word2index[word] for word, _ in limited_vocab}
-        return vocab
+        # Create a new list of words to keep
+        top_words = sorted_words[:max_vocab_size - 4]
+
+        # Create new dictionaries to store trimmed vocabulary
+        new_word2index = {}
+        new_word2count = {}
+        new_index2word = {PAD_TOKEN: "<PAD>", SOS_TOKEN: "<SOS>", EOS_TOKEN: "<EOS>", UNK_TOKEN: "<UNK>"}
+        
+        # Reset n_words
+        n_words = 4  # Count for PAD, SOS, EOS, UNK
+        
+        # Add the top words to the new dictionaries
+        for word, count in top_words:
+            new_word2index[word] = n_words
+            new_word2count[word] = count
+            new_index2word[n_words] = word
+            n_words += 1
+        
+        # Update instance variables
+        self.word2index = new_word2index
+        self.word2count = new_word2count
+        self.index2word = new_index2word
+        self.n_words = n_words  # Update n_words
+        
+    def get_word(self, index):
+        return self.index2word[index]
     
-    def save_lang(self, filepath):
-        vocab_data = {
-            'word2index': self.word2index,
-            'word2count': self.word2count,
-            'index2word': self.index2word,
-            'n_words': self.n_words
-        }
-        with open(filepath, 'w', encoding='utf-8') as f:
-            json.dump(vocab_data, f, ensure_ascii=False, indent=4)
-
-    def load_vocabulary(self, filepath):
-        with open(filepath, 'r', encoding='utf-8') as f:
-            vocab_data = json.load(f)
-        self.word2index = vocab_data['word2index']
-        self.word2count = vocab_data['word2count']
-        self.index2word = vocab_data['index2word']
-        self.n_words = vocab_data['n_words']
-
-def read_langs(data, lang1='en', lang2='vi', reverse=False):
-    """
-    Reads and processes language data, returning language objects and pairs of sentences.
-    Args:
-        data (str): The raw data containing sentences in both languages.
-        lang1 (str, optional): The code for the first language. Defaults to 'en'.
-        lang2 (str, optional): The code for the second language. Defaults to 'vi'.
-        reverse (bool, optional): If True, reverses the language pairs. Defaults to False.
-    Returns:
-        tuple: A tuple containing the input language object, output language object, and a list of sentence pairs.
-    """
-    print("Reading lines...")
+    def get_index(self, word):
+        if word in self.word2index:
+            return self.word2index[word]
+        else:
+            return UNK_TOKEN
     
-    # Split every line into pairs and normalize
-    pairs = preprocess_data_csv(data)
-
-    # Reverse pairs, make Lang instances
-    if reverse:
-        pairs = [list(reversed(p)) for p in pairs]
-        input_lang = Lang(lang2)
-        output_lang = Lang(lang1)
-    else:
-        input_lang = Lang(lang1)
-        output_lang = Lang(lang2)
-
-    return input_lang, output_lang, pairs
 
 def filter_pairs(pairs, max_length):
     """
@@ -102,54 +88,86 @@ def filter_pairs(pairs, max_length):
     
     return [pair for pair in pairs if filter_pair(pair, max_length)]
 
-def prepare_data(dir, lang1='en', lang2='vi', reverse=False):
-    input_lang, output_lang, pairs = read_langs(dir, lang1, lang2, reverse)
+def prepare_data(dirs, lang1='en', lang2='vi', reverse=False):
+    # [READ DATA]
+    print("Reading lines...\n")
     
-    print("Read %s sentence pairs" % len(pairs))
-    pairs = filter_pairs(pairs, MAX_SEQ_LENGTH)
+    # Split every line into pairs and normalize
+    pairs_list = [preprocess_data_csv(dir) for dir in dirs]
+
+    # Reverse pairs, make Lang instances
+    if reverse:
+        pairs = [list(reversed(p)) for p in pairs]
+        input_lang = Lang(lang2)
+        output_lang = Lang(lang1)
+    else:
+        input_lang = Lang(lang1)
+        output_lang = Lang(lang2)
+
+    # [FILTER PAIRS]
+    for i in range(len(pairs_list)):
+        print("Read %s sentence pairs" % len(pairs_list[i]))
+        pairs_list[i] = filter_pairs(pairs_list[i], MAX_SEQ_LENGTH - 2)
+        print("Trimmed to %s sentence pairs\n" % len(pairs_list[i]))
+        
     
-    print("Trimmed to %s sentence pairs" % len(pairs))
     print("Counting words...")
-    for pair in pairs:
-        input_lang.add_sentence(pair[0])
-        output_lang.add_sentence(pair[1])
+    for pairs in pairs_list:
+        for pair in pairs:
+            input_lang.add_sentence(pair[0])
+            output_lang.add_sentence(pair[1])
         
     print("Counted words:")
     print(input_lang.name, input_lang.n_words)
     print(output_lang.name, output_lang.n_words)
+    print()
+    
+    print("Trimmed words to VOCAB_SIZE...")
+    input_lang.trim_lang()
+    print("Trimmed Input Lang successfully:", input_lang.name, input_lang.n_words)
+    output_lang.trim_lang()
+    print("Trimmed Output Lang successfully:", output_lang.name, output_lang.n_words)
+    print()
 
-    return input_lang, output_lang, pairs
+    return input_lang, output_lang, pairs_list
 
 # [DATALOADER]
 
-def indexes_from_sentence(lang, sentence):
-    return [lang.word2index[word] for word in sentence.split(' ')]
+def indexes_from_sentence(lang: Lang, sentence: str):
+    return [lang.get_index(word) for word in sentence.split(' ')]
 
-def get_dataloader(dir, batch_size):
-    input_lang, output_lang, pairs = prepare_data(dir)
+def get_dataloader(dirs, batch_size):
+    input_lang, output_lang, pairs_list = prepare_data(dirs)
+    dataloaders = []
     
-    n = len(pairs)
-    input_ids = np.zeros((n, MAX_SEQ_LENGTH + 2), dtype=np.int32)
-    target_ids = np.zeros((n, MAX_SEQ_LENGTH + 2), dtype=np.int32)
+    for pairs in pairs_list:
+        n = len(pairs)
+        input_ids = np.zeros((n, MAX_SEQ_LENGTH), dtype=np.int32)
+        target_ids = np.zeros((n, MAX_SEQ_LENGTH), dtype=np.int32)
 
-    for idx, (inp, tgt) in enumerate(pairs):
-        inp_ids = [SOS_TOKEN] + indexes_from_sentence(input_lang, inp) + [EOS_TOKEN]
-        tgt_ids = [SOS_TOKEN] + indexes_from_sentence(output_lang, tgt) + [EOS_TOKEN]
-        
-        input_ids[idx, :len(inp_ids)] = inp_ids
-        target_ids[idx, :len(tgt_ids)] = tgt_ids
+        for idx, (inp, tgt) in enumerate(pairs):
+            inp_ids = [SOS_TOKEN] + indexes_from_sentence(input_lang, inp) + [EOS_TOKEN]
+            tgt_ids = [SOS_TOKEN] + indexes_from_sentence(output_lang, tgt) + [EOS_TOKEN]
+            
+            input_ids[idx, :len(inp_ids)] = inp_ids
+            target_ids[idx, :len(tgt_ids)] = tgt_ids
 
-    train_data = TensorDataset(torch.LongTensor(input_ids).to(DEVICE),
-                               torch.LongTensor(target_ids).to(DEVICE))
+        data = TensorDataset(torch.LongTensor(input_ids).to(DEVICE),
+                            torch.LongTensor(target_ids).to(DEVICE))
 
-    train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
-    return input_lang, output_lang, train_dataloader
+        sampler = RandomSampler(data)
+        dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size, drop_last=True)
+        dataloaders.append(dataloader)
+    
+    return input_lang, output_lang, dataloaders
 
 if __name__ == "__main__":
     from pprint import pprint
-    input_lang, output_lang, train_dataloader = get_dataloader('data/raw/test.csv', 2)
+    input_lang, output_lang, (train_dataloader, val_loader, test_loader) \
+    = get_dataloader([TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR], 2)
+    
     for batch in train_dataloader:
+        print(type(batch[0]), type(batch[1]))
         pprint(batch)
         break
     

@@ -1,29 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
-from encoder import EncoderRNN
-from decoder import DecoderRNN
 
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-from utils import teacher_forcing
+from models.encoder import EncoderGRU
+from models.decoder import DecoderGRU
 
-
-import torch.nn as nn
-import torch
-
-import torch
-import torch.nn as nn
-
-import torch
-import torch.nn as nn
-
-import torch
-import torch.nn as nn
-
-class Seq2Seq(nn.Module):
+class Seq2SeqGRU(nn.Module):
     def __init__(self,
                  input_size=VOCAB_SIZE,
                  output_size=VOCAB_SIZE,
@@ -35,7 +19,7 @@ class Seq2Seq(nn.Module):
                  encoder_bidirectional=ENCODER_BIDIRECTIONAL,
                  teacher_forcing_ratio=TEACHER_FORCING_RATIO):
         
-        super(Seq2Seq, self).__init__()
+        super(Seq2SeqGRU, self).__init__()
         self.input_size = input_size
         self.output_size = output_size
         self.hidden_size = hidden_size
@@ -45,11 +29,11 @@ class Seq2Seq(nn.Module):
         self.num_layers = num_layers
         self.encoder_bidirectional = encoder_bidirectional
 
-        self.encoder = EncoderRNN(input_size, embedding_size, hidden_size, num_layers, dropout_rate, encoder_bidirectional)
+        self.encoder = EncoderGRU(input_size, embedding_size, hidden_size, num_layers, dropout_rate, encoder_bidirectional)
         
         # Adjust number of layers for the decoder if encoder is bidirectional
         decoder_num_layers = 2 if encoder_bidirectional else 1
-        self.decoder = DecoderRNN(embedding_size, hidden_size, output_size, dropout_rate, decoder_num_layers, teacher_forcing_ratio)
+        self.decoder = DecoderGRU(embedding_size, hidden_size, output_size, dropout_rate, decoder_num_layers, teacher_forcing_ratio)
 
     def forward(self, input, target=None):
         encoder_outputs, encoder_hidden = self.encoder(input)
@@ -74,7 +58,7 @@ if __name__ == "__main__":
     src = torch.randint(0, 10, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)  # (BATCH_SIZE, MAX_SEQ_LENGTH)
     trg = torch.randint(0, 10, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)  # (BATCH_SIZE, MAX_SEQ_LENGTH)
 
-    model = Seq2Seq().to(DEVICE)
+    model = Seq2SeqGRU().to(DEVICE)
     outputs = model(src, trg)
 
     print(outputs.shape)  # Expected shape: (sequence_length, batch_size, trg_vocab_size)
