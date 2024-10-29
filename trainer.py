@@ -18,7 +18,7 @@ class Seq2SeqTrainer:
                  max_norm=1.0):
         self.name = name
         self.model = model.to(device)
-        self.checkpoint_directory = f'checkpoints/{self.name}'
+        self.checkpoint_directory = f'results/{self.name}'
         
         self.device = device
         self.max_norm = max_norm

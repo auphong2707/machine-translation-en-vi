@@ -1,3 +1,5 @@
+import os
+import pickle
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler
@@ -73,6 +75,19 @@ class Lang:
         else:
             return UNK_TOKEN
     
+    def save(self, filepath):
+        """Saves the Lang object to a file."""
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, 'wb') as file:
+            pickle.dump(self.__dict__, file)
+    
+    def load(self, filepath):
+        """Loads the Lang object from a file."""
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"The file {filepath} does not exist.")
+        with open(filepath, 'rb') as file:
+            self.__dict__ = pickle.load(file)
 
 def filter_pairs(pairs, max_length):
     """
