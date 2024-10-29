@@ -2,11 +2,8 @@ import math, os, re, time, random, sys
 import numpy as np
 import pandas as pd
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
 import matplotlib.ticker as ticker
-import numpy as np
 
 sys.path.append('../machine-translation-en-vi')
 from config import *
@@ -138,14 +135,30 @@ def time_since(since, percent):
     rs = es - s
     return '%s (- %s)' % (as_minutes(s), as_minutes(rs))
 
+def save_loss(epoch, train_loss, val_loss, filename='losses.csv'):
+    # Check if the CSV file already exists
+    file_exists = os.path.isfile(filename)
+    
+    # Create a DataFrame to hold the loss values
+    loss_data = pd.DataFrame({'Epoch': [epoch], 'Train Loss': [train_loss], 'Validation Loss': [val_loss]})
+    
+    # Append the loss data to the CSV file, creating it if it doesn't exist
+    loss_data.to_csv(filename, mode='a', index=False, header=not file_exists)
 
-def show_plot(train_losses, val_losses):
-    """Plot training and validation losses on a graph.
+def save_plot(csv_directory, filename='loss_plot.png'):
+    """Read training and validation losses from a CSV file, plot them, and save the plot.
     
     Args:
-        train_losses (list): List of training loss points to plot.
-        val_losses (list): List of validation loss points to plot.
+        csv_directory (str): Path to the CSV file containing losses.
+        filename (str): The name of the file to save the plot as.
     """
+    # Read the CSV file
+    df = pd.read_csv(csv_directory)
+    
+    # Extract train and val losses
+    train_losses = df['Train Loss'].tolist()  # Change 'train_loss' to your actual column name
+    val_losses = df['Validation Loss'].tolist()      # Change 'val_loss' to your actual column name
+    
     plt.figure()
     fig, ax = plt.subplots()
     
@@ -163,7 +176,9 @@ def show_plot(train_losses, val_losses):
     plt.legend()
     plt.title("Training and Validation Loss")
     
-    plt.show()
+    # Save the plot to a file
+    plt.savefig(filename)
+    plt.close()  # Close the plot to free memory
 
     
 # [TEXT PREPROCESSING]

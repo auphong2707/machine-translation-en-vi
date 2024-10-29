@@ -23,7 +23,7 @@ def main():
     trainer = Seq2SeqTrainer(model, 'experiment_0')
 
     # Train the model
-    trainer.train(val_loader, test_loader, n_epochs=20, print_every=1, plot_every=1)
+    trainer.train(val_loader, test_loader, n_epochs=10, print_every=1, plot_every=1)
 
 if __name__ == "__main__":
     main()

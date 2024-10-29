@@ -7,7 +7,7 @@ import time
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-from helper import time_since, show_plot, save_checkpoint, load_checkpoint
+from helper import time_since, save_checkpoint, load_checkpoint, save_loss, save_plot
 from logger import setup_logger
 
 class Seq2SeqTrainer:
@@ -99,7 +99,7 @@ class Seq2SeqTrainer:
             start_epoch = 1
         
         print(f"\nStart training from epoch {start_epoch}")
-        print('-' * 89)
+        print('-' * 100)
         
         start = time.time()
         train_losses = []
@@ -117,8 +117,8 @@ class Seq2SeqTrainer:
             save_checkpoint(self.model, self.optimizer, epoch, train_loss, self.checkpoint_directory + '/checkpoint.pth')
 
             # Save the best checkpoint
-            if epoch == 1 or train_loss < self.best_loss:
-                self.best_loss = train_loss
+            if epoch == 1 or val_loss < self.best_loss:
+                self.best_loss = val_loss
                 save_checkpoint(self.model, self.optimizer, epoch, train_loss, self.checkpoint_directory + '/best.pth', best=True)
                 
             # Print loss every 'print_every' epochs
@@ -127,11 +127,14 @@ class Seq2SeqTrainer:
                                  (time_since(start, epoch / n_epochs), 
                                   epoch, epoch / n_epochs * 100, 
                                   train_loss, val_loss))
-                print('-' * 89)
+                print('-' * 100)
             
             # Collect losses for plotting
             if epoch % plot_every == 0:
                 train_losses.append(train_loss)
                 val_losses.append(val_loss)
+                
+            save_loss(epoch, train_loss, val_loss, self.checkpoint_directory + '/losses.csv')
 
-        show_plot(train_losses, val_losses)
+        # Save the plot
+        save_plot(self.checkpoint_directory + '/losses.csv', self.checkpoint_directory + '/losses.png')
