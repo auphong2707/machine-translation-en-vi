@@ -25,7 +25,8 @@ def main():
     output_lang.save('results/'+experiment_name+'/output_lang.pkl')
     
     # Initialize model
-    model = torch.nn.DataParallel(model, device_ids = [0,1]).to(DEVICE)
+    model = torch.nn.DataParallel(Seq2SeqGRU(), device_ids = [0,1]).to(DEVICE)
+    
 
     # Initialize trainer
     trainer = Seq2SeqTrainer(model, experiment_name)
