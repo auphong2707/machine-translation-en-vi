@@ -18,6 +18,7 @@ class DecoderGRU(nn.Module):
         self.teacher_forcing_ratio = teacher_forcing_ratio  # Store teacher forcing ratio
         
         self.embedding = nn.Embedding(output_size, embedding_size)
+        self.dropout = nn.Dropout(dropout_rate)
         self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_layers, dropout=dropout_rate, batch_first=True)
         self.out = nn.Linear(hidden_size, output_size)
 
@@ -44,8 +45,7 @@ class DecoderGRU(nn.Module):
         return decoder_outputs, decoder_hidden, None  # We return `None` for consistency in the training loop
 
     def forward_step(self, input, hidden):
-        output = self.embedding(input)
-        output = F.relu(output)
+        output = self.dropout(self.embedding(input))
         output, hidden = self.gru(output, hidden)
         output = self.out(output)
         return output, hidden

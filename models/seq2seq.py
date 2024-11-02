@@ -31,9 +31,8 @@ class Seq2SeqGRU(nn.Module):
 
         self.encoder = EncoderGRU(input_size, embedding_size, hidden_size, num_layers, dropout_rate, encoder_bidirectional)
         
-        # Adjust number of layers for the decoder if encoder is bidirectional
-        decoder_num_layers = 2 if encoder_bidirectional else 1
-        self.decoder = DecoderGRU(embedding_size, hidden_size, output_size, dropout_rate, decoder_num_layers, teacher_forcing_ratio)
+        decoder_hidden_size = hidden_size * 2 if encoder_bidirectional else hidden_size
+        self.decoder = DecoderGRU(embedding_size, decoder_hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio)
 
     def forward(self, input, target=None):
         encoder_outputs, encoder_hidden = self.encoder(input)
@@ -41,11 +40,13 @@ class Seq2SeqGRU(nn.Module):
         # For bidirectional GRU, we need to combine the last hidden states
         if self.encoder_bidirectional:
             # Get the last two hidden states: forward and backward
-            hidden_forward = encoder_hidden[-2]  # Last hidden state from the forward layer
-            hidden_backward = encoder_hidden[-1]  # Last hidden state from the backward layer
+            #hidden_forward = encoder_hidden[-2]  # Last hidden state from the forward layer
+            #hidden_backward = encoder_hidden[-1]  # Last hidden state from the backward layer
+            # Take all the odd layer
+            hidden_forward = encoder_hidden[0::2]
+            hidden_backward = encoder_hidden[1::2]
             
-            # Combine them to create the decoder's hidden state
-            decoder_hidden = torch.cat((hidden_forward.unsqueeze(0), hidden_backward.unsqueeze(0)), dim=0)  # Shape: (NUM_LAYERS, BATCH_SIZE, HIDDEN_SIZE)
+            decoder_hidden = torch.cat((hidden_forward, hidden_backward), dim=-1)
         else:
             decoder_hidden = encoder_hidden  # Use the hidden state directly
 
@@ -61,4 +62,4 @@ if __name__ == "__main__":
     model = Seq2SeqGRU().to(DEVICE)
     outputs = model(src, trg)
 
-    print(outputs.shape)  # Expected shape: (sequence_length, batch_size, trg_vocab_size)
+    print(outputs.shape)  # Expected shape: (SEQ_LENGTH, BATCH_SIZE, VOCAB_SIZE)
