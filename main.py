@@ -7,6 +7,7 @@ from models.seq2seq import Seq2SeqGRU
 from trainer import Seq2SeqTrainer
 from config import BATCH_SIZE, TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR
 from helper import compute_bleu
+from tester import tester
 
 import warnings
 
@@ -30,7 +31,12 @@ def main():
     trainer = Seq2SeqTrainer(model, experiment_name)
 
     # Train the model
-    trainer.train(train_loader, val_loader, n_epochs=5, print_every=1, plot_every=1)
+    trainer.train(test_loader, val_loader, n_epochs=1, print_every=1, plot_every=1)
+
+    # Test the model
+    tester(experiment_name)
+    
 
 if __name__ == "__main__":
     main()
+ 

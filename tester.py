@@ -1,11 +1,10 @@
 import torch
 import torch
-import torch.nn as nn
-import torch.optim as optim
 from models.seq2seq import Seq2SeqGRU
 from data.dataloader import get_dataloader, Lang
 from torch.nn.functional import softmax
 import pickle
+import numpy as np
 
 import sys
 sys.path.append('../machine-translation-en-vi')
@@ -92,9 +91,14 @@ def tester(dir):
     for i, (output, test) in enumerate(zip(test_outputs, ground_truth)):
         bleu_score.append(calculate_bleu(output, test))
 
-    with open(r"results\{}\result_bleu.pkl".format(dir), "wb") as f:
-        pickle.dump(bleu_score, f)
+    mean_bleu = np.mean(bleu_score)
+    variance_bleu = np.var(bleu_score)
+    num_elements = len(bleu_score)
 
+    with open(r"results\{}\bleu_score_stats.txt".format(dir), "w") as f:
+        f.write(f"Mean BLEU score: {mean_bleu}\n")
+        f.write(f"Variance of BLEU score: {variance_bleu}\n")
+        f.write(f"Number of elements in BLEU score array: {num_elements}\n")
 
 if __name__ == "__main__":
     tester("experiment_0")
