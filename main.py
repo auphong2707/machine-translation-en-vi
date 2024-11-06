@@ -8,8 +8,11 @@ from trainer import Seq2SeqTrainer
 from config import BATCH_SIZE, TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR
 from tester import tester
 from huggingface_hub import HfApi, login
-from kaggle_secrets import UserSecretsClient
+import argparse
 
+parser = argparse.ArgumentParser(description="Machine Translation Training Script")
+parser.add_argument("--huggingface_token", type=str, required=True, help="Hugging Face token for authentication")
+args = parser.parse_args()
 
 import warnings
 
@@ -33,15 +36,14 @@ def main():
     trainer = Seq2SeqTrainer(model, experiment_name)
 
     # Train the model
-    trainer.train(train_loader, val_loader, n_epochs=20, print_every=1, plot_every=1)
+    trainer.train(train_loader, val_loader, n_epochs=5, print_every=1, plot_every=1)
 
     # Test the model
     tester(experiment_name, output_lang, test_loader)
     
     
-    # Push to Hugging Face
-    user_secrets = UserSecretsClient()
-    login(token=user_secrets.get_secret("huggingface_token"))
+    # Push to Hugging Face)
+    login(token=args.huggingface_token)
     
     api = HfApi()
     api.upload_large_folder(
