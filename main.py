@@ -6,8 +6,10 @@ from data.dataloader import get_dataloader
 from models.seq2seq import Seq2SeqGRU
 from trainer import Seq2SeqTrainer
 from config import BATCH_SIZE, TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR
-from helper import compute_bleu
 from tester import tester
+from huggingface_hub import HfApi, login
+from kaggle_secrets import UserSecretsClient
+
 
 import warnings
 
@@ -31,10 +33,23 @@ def main():
     trainer = Seq2SeqTrainer(model, experiment_name)
 
     # Train the model
-    trainer.train(test_loader, val_loader, n_epochs=1, print_every=1, plot_every=1)
+    trainer.train(train_loader, val_loader, n_epochs=20, print_every=1, plot_every=1)
 
     # Test the model
-    tester(experiment_name)
+    tester(experiment_name, output_lang, test_loader)
+    
+    
+    # Push to Hugging Face
+    user_secrets = UserSecretsClient()
+    login(token=user_secrets.get_secret("huggingface_token"))
+    
+    api = HfApi()
+    api.upload_large_folder(
+        folder_path='results',
+        repo_type='model',
+        repo_id='auphong2707/machine-translation-en-vi',
+        private=True
+    )
     
 
 if __name__ == "__main__":
