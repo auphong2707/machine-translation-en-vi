@@ -8,7 +8,8 @@ sys.path.append('../machine-translation-en-vi')
 from config import *
 
 class DecoderGRU(nn.Module):
-    def __init__(self, embedding_size, hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio):
+    def __init__(self, embedding_size, hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio,
+                 batch_size, max_seq_length, device, sos_token=SOS_TOKEN):
         super(DecoderGRU, self).__init__()
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
@@ -21,13 +22,20 @@ class DecoderGRU(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_layers, dropout=dropout_rate, batch_first=True)
         self.out = nn.Linear(hidden_size, output_size)
+        
+        self.batch_size = batch_size
+        self.max_seq_length = max_seq_length
+        self.device = device
+        
+        self.sos_token = sos_token
 
     def forward(self, encoder_outputs, encoder_hidden, target_tensor=None):
-        decoder_input = torch.empty(BATCH_SIZE, 1, dtype=torch.long, device=DEVICE).fill_(SOS_TOKEN)
+        decoder_input = torch.empty(self.batch_size, 1, dtype=torch.long, device=self.device).fill_(self.sos_token)
         decoder_hidden = encoder_hidden
-        decoder_outputs = []
 
-        for i in range(MAX_SEQ_LENGTH):
+        decoder_outputs = []
+        
+        for i in range(self.max_seq_length):
             decoder_output, decoder_hidden = self.forward_step(decoder_input, decoder_hidden)
             decoder_outputs.append(decoder_output)
 

@@ -8,6 +8,9 @@ import matplotlib.ticker as ticker
 sys.path.append('../machine-translation-en-vi')
 from config import *
 
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*weights_only=False.*")
+
 def set_seed(seed=42):
     """Set random seed for reproducibility across numpy, random, and torch.
 

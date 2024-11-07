@@ -17,7 +17,9 @@ class Seq2SeqGRU(nn.Module):
                  dropout_rate=DROPOUT_RATE,
                  num_layers=NUM_LAYERS,
                  encoder_bidirectional=ENCODER_BIDIRECTIONAL,
-                 teacher_forcing_ratio=TEACHER_FORCING_RATIO):
+                 teacher_forcing_ratio=TEACHER_FORCING_RATIO,
+                 max_seq_length = MAX_SEQ_LENGTH,
+                 device = DEVICE):
         
         super(Seq2SeqGRU, self).__init__()
         self.input_size = input_size
@@ -28,21 +30,24 @@ class Seq2SeqGRU(nn.Module):
         self.dropout_rate = dropout_rate
         self.num_layers = num_layers
         self.encoder_bidirectional = encoder_bidirectional
+        
+        self.device = device
+        self.max_seq_length = max_seq_length
 
         self.encoder = EncoderGRU(input_size, embedding_size, hidden_size, num_layers, dropout_rate, encoder_bidirectional)
         
         decoder_hidden_size = hidden_size * 2 if encoder_bidirectional else hidden_size
-        self.decoder = DecoderGRU(embedding_size, decoder_hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio)
+        self.decoder = DecoderGRU(embedding_size, decoder_hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio,
+                                  batch_size, max_seq_length, device)
+        
+        self.to(device)
 
     def forward(self, input, target=None):
         encoder_outputs, encoder_hidden = self.encoder(input)
 
         # For bidirectional GRU, we need to combine the last hidden states
         if self.encoder_bidirectional:
-            # Get the last two hidden states: forward and backward
-            #hidden_forward = encoder_hidden[-2]  # Last hidden state from the forward layer
-            #hidden_backward = encoder_hidden[-1]  # Last hidden state from the backward layer
-            # Take all the odd layer
+            # Concatenate the final forward and backward hidden states
             hidden_forward = encoder_hidden[0::2]
             hidden_backward = encoder_hidden[1::2]
             

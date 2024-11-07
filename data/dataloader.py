@@ -122,7 +122,7 @@ def prepare_data(dirs, lang1='en', lang2='vi', reverse=False):
     # [FILTER PAIRS]
     for i in range(len(pairs_list)):
         print("Read %s sentence pairs" % len(pairs_list[i]))
-        pairs_list[i] = filter_pairs(pairs_list[i], MAX_SEQ_LENGTH - 2)
+        pairs_list[i] = filter_pairs(pairs_list[i], MAX_SEQ_LENGTH - 1)
         print("Trimmed to %s sentence pairs\n" % len(pairs_list[i]))
         
     
@@ -161,8 +161,8 @@ def get_dataloader(dirs, batch_size):
         target_ids = np.zeros((n, MAX_SEQ_LENGTH), dtype=np.int32)
 
         for idx, (inp, tgt) in enumerate(pairs):
-            inp_ids = [SOS_TOKEN] + indexes_from_sentence(input_lang, inp) + [EOS_TOKEN]
-            tgt_ids = [SOS_TOKEN] + indexes_from_sentence(output_lang, tgt) + [EOS_TOKEN]
+            inp_ids = indexes_from_sentence(input_lang, inp) + [EOS_TOKEN]
+            tgt_ids = indexes_from_sentence(output_lang, tgt) + [EOS_TOKEN]
             
             input_ids[idx, :len(inp_ids)] = inp_ids
             target_ids[idx, :len(tgt_ids)] = tgt_ids

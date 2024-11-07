@@ -26,18 +26,18 @@ UNK_TOKEN = 3                       # Unknown token
 
 
 # [MODEL ARCHITECTURES PARAMETERS]
-EMBEDDING_SIZE = 256                # Embedding size
-HIDDEN_SIZE = 512                   # Hidden size
-NUM_LAYERS = 3                      # Number of RNN layers
-DROPOUT_RATE = 0.1                  # Dropout rate
+EMBEDDING_SIZE = 256                # Embedding size (Change this)
+HIDDEN_SIZE = 512                   # Hidden size (Change this)
+NUM_LAYERS = 3                      # Number of RNN layers (Change this)
+DROPOUT_RATE = 0.1                  # Dropout rate (Change this)
 ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
 
 
 # [TRAINING PARAMETERS]
-BATCH_SIZE = 512                     # Number of samples per batch
+BATCH_SIZE = 512                    # Number of samples per batch
 EPOCHS = 20                         # Number of training epochs
 LEARNING_RATE = 0.001               # Initial learning rate
-TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder
+TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder (Change this)
 
 
 
@@ -52,3 +52,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() and USE_GPU else "cpu"
 CHECKPOINT_PATH = "checkpoints/"    # Path to save checkpoints
 SAVE_EVERY = 5                      # Save model every X epochs
 LOG_INTERVAL = 50                   # Print logs every X batches
+
+# [ADDITIONAL SETTINGS]
+BEAM_WIDTH = 10                      # Beam width for beam search
+EXPERIMENT_NAME = "experiment_0"     # Name of the experiment (Change this)

@@ -1,94 +1,124 @@
 import torch
-import torch
-from models.seq2seq import Seq2SeqGRU
-from data.dataloader import get_dataloader, Lang
-from torch.nn.functional import softmax
-import pickle
+import torch.nn.functional as F
 import numpy as np
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-from collections import Counter
-import math
 
-def calculate_bleu(reference, candidate, max_n=4):
-    """
-    Calculate the BLEU score between two ordered lists of words.
-    
-    Args:
-        reference (list): List of words in the reference sentence.
-        candidate (list): List of words in the candidate (generated) sentence.
-        max_n (int): Maximum n-gram order to use (usually 4 for BLEU-4).
+from helper import load_checkpoint
+from models.seq2seq import Seq2SeqGRU
+
+class Beam:
+    def __init__(self, model, beam_width=BEAM_WIDTH, max_seq_length=MAX_SEQ_LENGTH, device=DEVICE):
+        self.model = model
+        self.beam_width = beam_width
+        self.max_seq_length = max_seq_length
+        self.device = device
+
+    def forward(self, input_tensor):
+        batch_size = input_tensor.size(0)
+        all_outputs = []
         
-    Returns:
-        float: The BLEU score.
-    """
-    
-    def n_gram_precision(reference, candidate, n):
-        ref_ngrams = Counter([tuple(reference[i:i+n]) for i in range(len(reference) - n + 1)])
-        cand_ngrams = Counter([tuple(candidate[i:i+n]) for i in range(len(candidate) - n + 1)])
+        for i in range(batch_size):
+            # Run beam search for each data point in the batch
+            outputs = self.beam_search(input_tensor[i].unsqueeze(0))
+            all_outputs.append(outputs)
         
-        match_count = sum(min(count, ref_ngrams[ngram]) for ngram, count in cand_ngrams.items())
-        total_count = sum(cand_ngrams.values())
+        return all_outputs
+
+    def beam_search(self, input_tensor):
+        # Initialize the beam with a list of tuples [(sequence, score, hidden)]
+        encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
         
-        return match_count / total_count if total_count > 0 else 0
+        # For bidirectional GRU, we need to combine the last hidden states
+        if self.model.encoder_bidirectional:
+            # Concatenate the final forward and backward hidden states
+            hidden_forward = encoder_hidden[0::2]
+            hidden_backward = encoder_hidden[1::2]
+            
+            decoder_hidden = torch.cat((hidden_forward, hidden_backward), dim=-1)
+        else:
+            decoder_hidden = encoder_hidden  # Use the hidden state directly
+        
+        # Start the beam with the <sos> token and zero score
+        beams = [(torch.empty(1, 1, dtype=torch.long, device=self.device).fill_(self.model.decoder.sos_token), 0, decoder_hidden)]
+        
+        for _ in range(self.max_seq_length):
+            new_beams = []
+            for sequence, score, hidden in beams:
+                # Pass through the decoder step by step
+                output, hidden = self.model.decoder.forward_step(sequence[:, -1:], hidden)
+                log_probs = F.log_softmax(output, dim=-1).squeeze(1)
+                
+                # Get top beam_width candidates
+                top_log_probs, top_indices = log_probs.topk(self.beam_width)
+                
+                # Create new beams with updated sequences and scores
+                for k in range(self.beam_width):
+                    new_seq = torch.cat([sequence, top_indices[:, k].unsqueeze(1)], dim=1)
+                    new_score = score + top_log_probs[:, k].item()
+                    new_beams.append((new_seq, new_score, hidden))
+
+            # Select the top beam_width beams
+            new_beams = sorted(new_beams, key=lambda x: x[1], reverse=True)[:self.beam_width]
+            beams = new_beams
+
+        # Return sequences from the final beams
+        final_sequences = [seq for seq, _, _ in beams]
+        return final_sequences
     
-    precisions = [n_gram_precision(reference, candidate, n) for n in range(1, max_n + 1)]
+def remove_unnecessary_tokens(sentence):
+    return [word for word in sentence if word not in [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]]
     
-    ref_len = len(reference)
-    cand_len = len(candidate)
-    brevity_penalty = math.exp(1 - ref_len / cand_len) if cand_len < ref_len else 1
     
-    bleu_score = brevity_penalty * math.exp(sum(math.log(p) for p in precisions if p > 0) / max_n)
-    
-    return bleu_score
-
-def test_model(model, test_loader, output_lang):
-    all_outputs = []  
-    batch_cnt = 0
-    with torch.no_grad():  
-        for batch in test_loader:
-            inputs, targets = batch 
-            inputs = inputs.to(DEVICE)  
-
-            # Forward pass through the model
-            outputs = model(inputs)
-
-            probabilities = softmax(outputs, dim=-1)
-            predicted_token_id = torch.argmax(probabilities, dim=-1)
-            for corpus in predicted_token_id:
-                decoded_words = [output_lang.get_word(token_id) for token_id in corpus.tolist()]
-                all_outputs.append(decoded_words) 
-    return all_outputs
-
-def tester(dir, output_lang, test_loader):
-    model = Seq2SeqGRU().to(DEVICE)  
-
-    checkpoint_path = 'results/{}/checkpoint.pth'.format(dir) 
-    checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
-    model.load_state_dict(checkpoint['model_state_dict']) 
+def evaluate(experiment_name, output_lang, test_loader):
+    model = Seq2SeqGRU()    
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    load_checkpoint(model, optimizer, 'results/experiment_0/best.pth')
 
     model.eval()
-    test_outputs = test_model(model, test_loader, output_lang)
-
-    ground_truth = []
-
+    beam_search = Beam(model)
+    
+    smoothing = SmoothingFunction().method1
+    bleu_score_best = []
+    bleu_score_avg = []
+    
     for batch in test_loader:
-        for corpus in batch:
-            for sentence in corpus:
-                decoded_words = [output_lang.get_word(token_id) for token_id in sentence.tolist()]
-                ground_truth.append(decoded_words) 
+        inputs, targets = batch
 
-    bleu_score = []
-    for i, (output, test) in enumerate(zip(test_outputs, ground_truth)):
-        bleu_score.append(calculate_bleu(output, test))
+        outputs = beam_search.forward(inputs.to(DEVICE))
+    
+        for i in range(BATCH_SIZE):
+            target_sentence = remove_unnecessary_tokens(targets[i].tolist())
+            target_sentence = [output_lang.get_word(token_id) for token_id in target_sentence]
+            
+            
+            sentence_bleu_score = []
+            
+            for output in outputs[i]:
+                output_sentence = remove_unnecessary_tokens(output.squeeze().tolist())
+                output_sentence = [output_lang.get_word(token_id) for token_id in output_sentence]
+                
+                sentence_bleu_score.append(sentence_bleu([target_sentence], output_sentence, smoothing_function=smoothing))
+                
+            bleu_score_best.append(max(sentence_bleu_score))
+            bleu_score_avg.append(np.mean(sentence_bleu_score))
+    
+    num_elements = len(bleu_score_best)
+    
+    mean_bleu_best = np.mean(bleu_score_best)
+    variance_bleu_best = np.var(bleu_score_best)
+    
+    mean_bleu_avg = np.mean(bleu_score_avg)
+    variance_bleu_avg = np.var(bleu_score_avg)
 
-    mean_bleu = np.mean(bleu_score)
-    variance_bleu = np.var(bleu_score)
-    num_elements = len(bleu_score)
-
-    with open(r"results/{}/bleu_score_stats.txt".format(dir), "w") as f:
-        f.write(f"Mean BLEU score: {mean_bleu}\n")
-        f.write(f"Variance of BLEU score: {variance_bleu}\n")
-        f.write(f"Number of elements in BLEU score array: {num_elements}\n")
+    with open(r"results/{}/bleu_score_stats.txt".format(experiment_name), "w") as f:
+        f.write(f"Number of elements in BLEU score array: {num_elements}\n\n")
+        
+        f.write(f"Mean BLEU score (best): {mean_bleu_best}\n")
+        f.write(f"Variance of BLEU score (Best): {variance_bleu_best}\n\n")
+        
+        f.write(f"Mean BLEU score (avg): {mean_bleu_avg}\n")
+        f.write(f"Variance of BLEU score (avg): {variance_bleu_avg}\n")
