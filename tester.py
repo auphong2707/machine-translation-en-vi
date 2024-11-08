@@ -76,7 +76,7 @@ def remove_unnecessary_tokens(sentence):
 def evaluate(experiment_name, output_lang, test_loader):
     model = Seq2SeqGRU()    
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    load_checkpoint(model, optimizer, 'results/experiment_0/best.pth')
+    load_checkpoint(model, optimizer, f'results/{experiment_name}/best.pth')
 
     model.eval()
     beam_search = Beam(model)
