@@ -17,7 +17,7 @@ SAVE_MODEL_PATH = "models/"         # Where to save models
 
 # [TEXT PROCESSING]
 MAX_SEQ_LENGTH = 50                 # Maximum length of input/output sequences
-VOCAB_SIZE = 10000                  # Maximum vocabulary size
+VOCAB_SIZE = 20000                  # Maximum vocabulary size
 PAD_TOKEN = 0                       # Padding token
 SOS_TOKEN = 1                       # Start-of-sequence token
 EOS_TOKEN = 2                       # End-of-sequence token
