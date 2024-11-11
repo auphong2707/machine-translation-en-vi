@@ -144,23 +144,18 @@ class DecoderAttnRNN(nn.Module):
         return output, hidden, attn_weights
     
 if __name__ == "__main__":
-    # decoder = DecoderGRU(EMBEDDING_SIZE, HIDDEN_SIZE, VOCAB_SIZE, DROPOUT_RATE, NUM_LAYERS * 2, 
-    #                     TEACHER_FORCING_RATIO, BATCH_SIZE, MAX_SEQ_LENGTH, DEVICE).to(DEVICE)
-    decoder = DecoderAttnRNN(EMBEDDING_SIZE, HIDDEN_SIZE, VOCAB_SIZE, DROPOUT_RATE, NUM_LAYERS * 2, 
-                            TEACHER_FORCING_RATIO, BATCH_SIZE, MAX_SEQ_LENGTH, DEVICE).to(DEVICE)
+    # Test BahdanauAttention
+    hidden_size = 256
+    batch_size = 2
+    seq_len = 10
 
-    encoder_outputs = torch.randn(MAX_SEQ_LENGTH, BATCH_SIZE, HIDDEN_SIZE * 2).to(DEVICE)
-    encoder_hidden = torch.randn(NUM_LAYERS * 2, BATCH_SIZE, HIDDEN_SIZE).to(DEVICE)
-    target_tensor = torch.randint(0, VOCAB_SIZE, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)
-    
-    # print(encoder_outputs.size())
-    # print(encoder_hidden.size())
-    # print(target_tensor.size())
-    
-    # decoder_outputs, decoder_hidden, _ = decoder(encoder_outputs, encoder_hidden, target_tensor)
-    decoder_outputs, decoder_hidden, attentions = decoder(encoder_outputs, encoder_hidden, target_tensor)
+    attention = BahdanauAttention(hidden_size)
+    query = torch.randn(batch_size, seq_len, hidden_size)
+    keys = torch.randn(seq_len, batch_size, hidden_size)
 
-    assert decoder_outputs.size() == (BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE)
-    assert decoder_hidden.size() == (NUM_LAYERS * 2, BATCH_SIZE, HIDDEN_SIZE)
-    # print("DecoderRNN test passed.")
-    print("DecoderAttentionRNN test passed.")
+    context, weights = attention(query, keys)
+
+    print("Query shape:", query.shape)
+    print("Keys shape:", keys.shape)
+    print("Context shape:", context.shape)
+    print("Attention weights shape:", weights.shape)
