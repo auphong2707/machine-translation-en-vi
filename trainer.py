@@ -150,34 +150,71 @@ class TransformerTrainer(Seq2SeqTrainer):
 
         for data in dataloader:
             src, tgt = data
-            tgt_input = torch.cat([torch.full((tgt.size(0), 1), SOS_TOKEN, device=DEVICE), tgt[:, :-1]], dim=1)
+            tgt_input = torch.cat([torch.full((tgt.size(0), 1), SOS_TOKEN, device=self.device), tgt[:, :-1]], dim=1)
             tgt_output = tgt
-            
+
             src, tgt_input, tgt_output = src.to(self.device), tgt_input.to(self.device), tgt_output.to(self.device)
-            
+
             # Zero gradients
             self.optimizer.zero_grad()
-            
+
             # Create mask
             src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = self.model.create_masks(src, tgt_input)
-            
+
             # Forward pass
-            output = self.model(src, tgt_input,
-                            input_mask=src_mask,
-                            target_mask=tgt_mask,
-                            input_padding_mask=src_padding_mask,
-                            target_padding_mask=tgt_padding_mask)
-            
+            output = self.model(
+                src, tgt_input,
+                input_mask=src_mask,
+                target_mask=tgt_mask,
+                input_padding_mask=src_padding_mask,
+                target_padding_mask=tgt_padding_mask
+            )
+
             # Compute loss
-            loss = self.criterion(output.view(-1, output.shape[2]), tgt_output.view(tgt_input.shape[0] * tgt_input.shape[1]))
+            loss = self.criterion(output.view(-1, output.shape[2]), tgt_output.view(-1))
 
             # Update loss
-            current_loss += loss.item()
+            total_loss += loss.item()
 
             # Backward
             loss.backward()
 
+            # Gradient clipping
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_norm)
+
             # Update parameters
             self.optimizer.step()
-            
+
         return total_loss / len(dataloader)
+    
+    def validate(self, val_dataloader):
+        total_loss = 0
+        self.model.eval()  # Set model to evaluation mode
+
+        with torch.no_grad():
+            for data in val_dataloader:
+                src, tgt = data
+                tgt_input = torch.cat([torch.full((tgt.size(0), 1), SOS_TOKEN, device=self.device), tgt[:, :-1]], dim=1)
+                tgt_output = tgt
+
+                src, tgt_input, tgt_output = src.to(self.device), tgt_input.to(self.device), tgt_output.to(self.device)
+
+                # Create mask
+                src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = self.model.create_masks(src, tgt_input)
+
+                # Forward pass
+                output = self.model(
+                    src, tgt_input,
+                    input_mask=src_mask,
+                    target_mask=tgt_mask,
+                    input_padding_mask=src_padding_mask,
+                    target_padding_mask=tgt_padding_mask
+                )
+
+                # Compute loss
+                loss = self.criterion(output.view(-1, output.shape[2]), tgt_output.view(-1))
+
+                # Update loss
+                total_loss += loss.item()
+
+        return total_loss / len(val_dataloader)

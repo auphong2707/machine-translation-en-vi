@@ -28,6 +28,7 @@ class Transformer(nn.Module):
         self.layers = layers
         self.heads = heads
         self.feed_forward = feed_forward
+        self.device = device
         
         self.input_embedding = nn.Embedding(input_size, embedding_size)
         self.target_embedding = nn.Embedding(output_size, embedding_size)
@@ -44,17 +45,22 @@ class Transformer(nn.Module):
         self.linear = nn.Linear(embedding_size, output_size)
         self.log_softmax = nn.LogSoftmax(dim=-1)
         
-        self.to(DEVICE)
+        self.to(self.device)
+        
+    def generate_square_subsequent_mask(self, sz):
+        mask = torch.triu(torch.ones((sz, sz), device=DEVICE)) == 1
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        return mask
     
     def create_masks(self, src, tgt):
         src_seq_len = src.shape[1]
         tgt_seq_len = tgt.shape[1]
         
-        tgt_mask = self.transformer.generate_square_subsequent_mask(tgt_seq_len)
-        src_mask = torch.zeros((src_seq_len, src_seq_len), device=DEVICE).type(torch.bool)
+        tgt_mask = self.generate_square_subsequent_mask(tgt_seq_len)
+        src_mask = torch.zeros((src_seq_len, src_seq_len), device=self.device).type(torch.bool)
         
-        src_padding_mask = (src == PAD_TOKEN)
-        tgt_padding_mask = (tgt == PAD_TOKEN)
+        src_padding_mask = (src == PAD_TOKEN).type(torch.bool)
+        tgt_padding_mask = (tgt == PAD_TOKEN).type(torch.bool)
         
         return src_mask, tgt_mask, src_padding_mask, tgt_padding_mask
         
@@ -84,7 +90,7 @@ class Transformer(nn.Module):
     def translate(self, input):
         self.eval()
         
-        y_input = torch.full((self.batch_size, 1), SOS_TOKEN, device=DEVICE)
+        y_input = torch.full((self.batch_size, 1), SOS_TOKEN, device=self.device)
         for _ in range(MAX_SEQ_LENGTH):
             # Create mask
             input_mask, target_mask, input_padding_mask, target_padding_mask = self.create_masks(input, y_input)
@@ -125,3 +131,5 @@ if __name__ == '__main__':
     # Test the translate function
     translated_output = model.translate(input_tensor)
     print("Translated output shape:", translated_output.shape)
+    
+    # print(model.transformer.generate_square_subsequent_mask(10, device=DEVICE).type(torch.bool))
