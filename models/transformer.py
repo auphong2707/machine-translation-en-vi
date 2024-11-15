@@ -56,7 +56,7 @@ class Transformer(nn.Module):
         src_seq_len = src.shape[1]
         tgt_seq_len = tgt.shape[1]
         
-        tgt_mask = self.generate_square_subsequent_mask(tgt_seq_len).type(torch.bool)
+        tgt_mask = self.generate_square_subsequent_mask(tgt_seq_len)
         src_mask = torch.zeros((src_seq_len, src_seq_len), device=self.device).type(torch.bool)
         
         src_padding_mask = (src == PAD_TOKEN).type(torch.bool)
