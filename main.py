@@ -3,7 +3,7 @@ set_seed()
 
 from data.dataloader import get_dataloader
 from models.seq2seq import Seq2SeqGRU
-from trainer import Trainer
+from trainer import Seq2SeqTrainer
 from config import *
 from tester import evaluate
 from huggingface_hub import HfApi, login
@@ -32,7 +32,7 @@ def main():
     model = Seq2SeqGRU()
 
     # Initialize trainer
-    trainer = Trainer(model, experiment_name)
+    trainer = Seq2SeqTrainer(model, experiment_name)
 
     # Train the model
     trainer.train(train_loader, val_loader, n_epochs=EPOCHS, print_every=1, plot_every=1)

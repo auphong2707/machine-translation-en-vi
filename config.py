@@ -59,4 +59,4 @@ LOG_INTERVAL = 50                   # Print logs every X batches
 
 # [ADDITIONAL SETTINGS]
 BEAM_WIDTH = 5                      # Beam width for beam search
-EXPERIMENT_NAME = "transformer_one"     # Name of the experiment (Change this)
+EXPERIMENT_NAME = "experiment_0"     # Name of the experiment (Change this)

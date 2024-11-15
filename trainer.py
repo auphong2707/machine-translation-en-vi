@@ -10,7 +10,7 @@ from config import *
 from helper import time_since, save_checkpoint, load_checkpoint, save_loss, save_plot
 from logger import setup_logger
 
-class Trainer:
+class Seq2SeqTrainer:
     def __init__(self, model, name,
                  learning_rate=LEARNING_RATE, 
                  device=DEVICE, 
