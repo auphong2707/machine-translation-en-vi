@@ -25,21 +25,25 @@ UNK_TOKEN = 3                       # Unknown token
 
 
 
-# [MODEL ARCHITECTURES PARAMETERS]
+# [RNN ARCHITECTURES PARAMETERS]
 EMBEDDING_SIZE = 256                # Embedding size (Change this)
 HIDDEN_SIZE = 512                   # Hidden size (Change this)
 NUM_LAYERS = 3                      # Number of RNN layers (Change this)
 DROPOUT_RATE = 0.1                  # Dropout rate (Change this)
 ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
+TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder (Change this)
 
+# [TRANSFORMER PARAMETERS]
+TFM_EMBEDDING_SIZE = 512
+TFM_DROPOUT_RATE = 0.2
+TFM_NUM_LAYERS = 10
+TFM_NUM_HEADS = 8
+TFM_DIM_FEED_FORWARD = 2048
 
 # [TRAINING PARAMETERS]
 BATCH_SIZE = 512                    # Number of samples per batch
 EPOCHS = 50                         # Number of training epochs
 LEARNING_RATE = 0.001               # Initial learning rate
-TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder (Change this)
-
-
 
 # [HARDWARE SETTINGS]
 USE_GPU = True                      # Use GPU if available
