@@ -2,7 +2,7 @@ from helper import set_seed
 set_seed()
 
 from data.dataloader import get_dataloader
-from models.seq2seq import Seq2SeqGRU
+from models.transformer import Transformer
 from trainer import Trainer
 from config import *
 from tester import evaluate
@@ -29,7 +29,7 @@ def main():
     output_lang.save('results/'+experiment_name+'/output_lang.pkl')
     
     # Initialize model
-    model = Seq2SeqGRU()
+    model = Transformer()
 
     # Initialize trainer
     trainer = Trainer(model, experiment_name)
