@@ -46,17 +46,12 @@ class Transformer(nn.Module):
         self.log_softmax = nn.LogSoftmax(dim=-1)
         
         self.to(self.device)
-        
-    def generate_square_subsequent_mask(self, sz):
-        mask = torch.triu(torch.ones((sz, sz), device=DEVICE)) == 1
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
     
     def create_masks(self, src, tgt):
         src_seq_len = src.shape[1]
         tgt_seq_len = tgt.shape[1]
         
-        tgt_mask = self.generate_square_subsequent_mask(tgt_seq_len)
+        tgt_mask = self.transformer.generate_square_subsequent_mask(tgt_seq_len, device=self.device).type(torch.bool)
         src_mask = torch.zeros((src_seq_len, src_seq_len), device=self.device).type(torch.bool)
         
         src_padding_mask = (src == PAD_TOKEN).type(torch.bool)
