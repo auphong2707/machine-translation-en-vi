@@ -138,3 +138,46 @@ class Seq2SeqTrainer:
 
         # Save the plot
         save_plot(self.checkpoint_directory + '/losses.csv', self.checkpoint_directory + '/losses.png')
+        
+        
+class TransformerTrainer(Seq2SeqTrainer):
+    def __init__(self, model, name, learning_rate=LEARNING_RATE, device=DEVICE, criterion=nn.NLLLoss(ignore_index=PAD_TOKEN), max_norm=1):
+        super().__init__(model, name, learning_rate, device, criterion, max_norm)
+    
+    def train_epoch(self, dataloader):
+        total_loss = 0
+        self.model.train()  # Set model to training mode
+
+        for data in dataloader:
+            src, tgt = data
+            tgt_input = torch.cat([torch.full((tgt.size(0), 1), SOS_TOKEN, device=DEVICE), tgt[:, :-1]], dim=1)
+            tgt_output = tgt
+            
+            src, tgt_input, tgt_output = src.to(self.device), tgt_input.to(self.device), tgt_output.to(self.device)
+            
+            # Zero gradients
+            self.optimizer.zero_grad()
+            
+            # Create mask
+            src_mask, tgt_mask, src_padding_mask, tgt_padding_mask = self.model.create_masks(src, tgt_input)
+            
+            # Forward pass
+            output = self.model(src, tgt_input,
+                            input_mask=src_mask,
+                            target_mask=tgt_mask,
+                            input_padding_mask=src_padding_mask,
+                            target_padding_mask=tgt_padding_mask)
+            
+            # Compute loss
+            loss = self.criterion(output.view(-1, output.shape[2]), tgt_output.view(tgt_input.shape[0] * tgt_input.shape[1]))
+
+            # Update loss
+            current_loss += loss.item()
+
+            # Backward
+            loss.backward()
+
+            # Update parameters
+            self.optimizer.step()
+            
+        return total_loss / len(dataloader)

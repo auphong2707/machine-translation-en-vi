@@ -45,17 +45,12 @@ class Transformer(nn.Module):
         self.log_softmax = nn.LogSoftmax(dim=-1)
         
         self.to(DEVICE)
-        
-    def _generate_square_subsequent_mask(self, sz):
-        mask = (torch.triu(torch.ones(sz, sz, device=DEVICE)) == 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
     
-    def _create_masks(self, src, tgt):
+    def create_masks(self, src, tgt):
         src_seq_len = src.shape[1]
         tgt_seq_len = tgt.shape[1]
         
-        tgt_mask = self._generate_square_subsequent_mask(tgt_seq_len)
+        tgt_mask = self.transformer.generate_square_subsequent_mask(tgt_seq_len)
         src_mask = torch.zeros((src_seq_len, src_seq_len), device=DEVICE).type(torch.bool)
         
         src_padding_mask = (src == PAD_TOKEN)
@@ -82,7 +77,7 @@ class Transformer(nn.Module):
                                    target_padding_mask,
                                    memory_key_padding_mask)
 
-        outputs = self.linear(outputs)
+        outputs = self.log_softmax(self.linear(outputs))
         
         return outputs
     
@@ -92,7 +87,7 @@ class Transformer(nn.Module):
         y_input = torch.full((self.batch_size, 1), SOS_TOKEN, device=DEVICE)
         for _ in range(MAX_SEQ_LENGTH):
             # Create mask
-            input_mask, target_mask, input_padding_mask, target_padding_mask = self._create_masks(input, y_input)
+            input_mask, target_mask, input_padding_mask, target_padding_mask = self.create_masks(input, y_input)
             
             # Forward pass
             output = self(input,
