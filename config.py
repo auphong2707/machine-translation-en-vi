@@ -34,8 +34,8 @@ ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
 TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder (Change this)
 
 # [TRANSFORMER PARAMETERS]
-TFM_EMBEDDING_SIZE = 1024            # Transformer embedding size
-TFM_DROPOUT_RATE = 0.2              # Transformer dropout rate
+TFM_EMBEDDING_SIZE = 512            # Transformer embedding size
+TFM_DROPOUT_RATE = 0.5              # Transformer dropout rate
 TFM_NUM_LAYERS = 4                  # Number of transformer layers
 TFM_NUM_HEADS = 8                   # Number of attention heads
 TFM_DIM_FEED_FORWARD = 2048          # Dimension of feed forward network
