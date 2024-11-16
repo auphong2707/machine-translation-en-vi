@@ -8,7 +8,7 @@ SEED = 42                           # Random seed for reproducibility
 
 # [DATA PATHS]
 DATA_DIR = "data/raw/"      # Path to the dataset directory
-TRAIN_DATA_DIR = DATA_DIR + "train_300k.csv" # Path to training data
+TRAIN_DATA_DIR = DATA_DIR + "train_50k.csv" # Path to training data
 VAL_DATA_DIR = DATA_DIR + "val.csv"   # Path to validation data
 TEST_DATA_DIR = DATA_DIR + "test.csv"   # Path to test data
 SAVE_MODEL_PATH = "models/"         # Where to save models
@@ -34,14 +34,14 @@ ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
 TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder (Change this)
 
 # [TRANSFORMER PARAMETERS]
-TFM_EMBEDDING_SIZE = 512            # Transformer embedding size
+TFM_EMBEDDING_SIZE = 128            # Transformer embedding size
 TFM_DROPOUT_RATE = 0.2              # Transformer dropout rate
 TFM_NUM_LAYERS = 4                  # Number of transformer layers
-TFM_NUM_HEADS = 8                   # Number of attention heads
+TFM_NUM_HEADS = 4                   # Number of attention heads
 TFM_DIM_FEED_FORWARD = 2048          # Dimension of feed forward network
 
 # [TRAINING PARAMETERS]
-BATCH_SIZE = 256                    # Number of samples per batch
+BATCH_SIZE = 128                    # Number of samples per batch
 EPOCHS = 50                         # Number of training epochs
 LEARNING_RATE = 0.001               # Initial learning rate
 
