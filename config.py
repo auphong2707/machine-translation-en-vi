@@ -41,7 +41,7 @@ TFM_NUM_HEADS = 4                   # Number of attention heads
 TFM_DIM_FEED_FORWARD = 2048          # Dimension of feed forward network
 
 # [TRAINING PARAMETERS]
-BATCH_SIZE = 256                    # Number of samples per batch
+BATCH_SIZE = 512                    # Number of samples per batch
 EPOCHS = 50                         # Number of training epochs
 LEARNING_RATE = 1e-3               # Initial learning rate
 
