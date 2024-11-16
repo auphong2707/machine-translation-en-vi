@@ -144,11 +144,6 @@ class TransformerTrainer(Seq2SeqTrainer):
     def __init__(self, model, name, learning_rate=LEARNING_RATE, device=DEVICE, criterion=nn.NLLLoss(ignore_index=PAD_TOKEN), max_norm=1):
         super().__init__(model, name, learning_rate, device, criterion, max_norm)
         self.optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)  # Starting learning rate
-
-    def train(self, train_dataloader, val_dataloader, n_epochs, print_every=100, plot_every=100):
-        self.scheduler = torch.optim.lr_scheduler.
-        
-        super().train(train_dataloader, val_dataloader, n_epochs, print_every, plot_every)
     
     def train_epoch(self, dataloader):
         total_loss = 0
