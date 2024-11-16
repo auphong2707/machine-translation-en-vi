@@ -190,7 +190,6 @@ class TransformerTrainer(Seq2SeqTrainer):
 
             # Update parameters
             self.optimizer.step()
-            self.scheduler.step()
 
         return total_loss / len(dataloader)
     
