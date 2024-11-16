@@ -42,7 +42,7 @@ TFM_DIM_FEED_FORWARD = 2048          # Dimension of feed forward network
 
 # [TRAINING PARAMETERS]
 BATCH_SIZE = 256                    # Number of samples per batch
-EPOCHS = 50                         # Number of training epochs
+EPOCHS = 150                         # Number of training epochs
 LEARNING_RATE = 1e-4               # Initial learning rate
 
 # [HARDWARE SETTINGS]
