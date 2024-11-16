@@ -63,15 +63,15 @@ class BahdanauAttention(nn.Module):
     def __init__(self, hidden_size):
         super(BahdanauAttention, self).__init__()
         self.Wa = nn.Linear(hidden_size, hidden_size)
-        self.Ua = nn.Linear(hidden_size * 2, hidden_size)
+        self.Ua = nn.Linear(hidden_size, hidden_size)
         self.Va = nn.Linear(hidden_size, 1)
         
     def forward(self, query, keys):
-        query = query[:, -1, :].unsqueeze(1)
-        keys = keys.permute(1, 0, 2)
+        # keys = keys.permute(1, 0, 2)
         
-        print(query.size())
-        print(keys.size())
+        # query : (B, number of direction * number of layers, D)
+        # keys : (B, Seq, D)
+        query = query[:, :1, :].repeat(1, keys.size(1), 1)
         scores = self.Va(torch.tanh(self.Wa(query) + self.Ua(keys)))
         scores = scores.squeeze(2).unsqueeze(1)
         
@@ -93,7 +93,7 @@ class DecoderAttnRNN(nn.Module):
         
         self.embedding = nn.Embedding(output_size, embedding_size)
         self.attention = BahdanauAttention(hidden_size)
-        self.gru = nn.GRU(embedding_size, hidden_size, num_layers=num_layers, dropout=dropout_rate, batch_first=True)
+        self.gru = nn.GRU(2*embedding_size, hidden_size, num_layers=num_layers, dropout=dropout_rate, batch_first=True)
         self.out = nn.Linear(hidden_size, output_size)
         self.dropout = nn.Dropout(dropout_rate)
         
@@ -136,6 +136,8 @@ class DecoderAttnRNN(nn.Module):
         
         query = hidden.permute(1, 0, 2)
         context, attn_weights = self.attention(query, encoder_outputs)
+        print(f"Context shape: {context.shape}")
+        print(f"Embedded shape: {embedded.shape}")
         input_gru = torch.cat([embedded, context], dim=2)
 
         output, hidden = self.gru(input_gru, hidden)
@@ -144,18 +146,43 @@ class DecoderAttnRNN(nn.Module):
         return output, hidden, attn_weights
     
 if __name__ == "__main__":
-    # Test BahdanauAttention
+
+    # Test DecoderAttnRNN
+    num_layers = 4
+    embedding_size = 256
     hidden_size = 256
-    batch_size = 2
-    seq_len = 10
+    output_size = 100
+    dropout_rate = 0.1
+    teacher_forcing_ratio = 0.5
+    batch_size = 32
+    max_seq_length = 10
+    
+    decoder_attn = DecoderAttnRNN(embedding_size, hidden_size, output_size, dropout_rate, num_layers,
+                                  teacher_forcing_ratio, batch_size, max_seq_length, DEVICE)
+    encoder_outputs = torch.randn(32, 10, 256)
+    encoder_hidden = torch.randn(num_layers, 32, 256)
+    target_tensor = torch.randint(0, 100, (batch_size, max_seq_length), dtype=torch.long)
+    
+    decoder_outputs, decoder_hidden, attentions = decoder_attn(encoder_outputs, encoder_hidden, target_tensor)
+    print("Decoder outputs shape:", decoder_outputs.shape)
+    print("Decoder hidden shape:", decoder_hidden.shape)
+   
+    print("Attention weights shape:", attentions.shape)
+    print("Attention weights sum:", attentions.sum(dim=-1))
+    
+    # Test BahdanauAttention
+    # hidden_size = 256
+    # batch_size = 2
+    # seq_len = 10
 
-    attention = BahdanauAttention(hidden_size)
-    query = torch.randn(batch_size, seq_len, hidden_size)
-    keys = torch.randn(seq_len, batch_size, hidden_size)
+    # attention = BahdanauAttention(hidden_size)
+    # query = torch.randn(batch_size, seq_len, hidden_size)
+    # keys = torch.randn(seq_len, batch_size, hidden_size)
 
-    context, weights = attention(query, keys)
+    # context, weights = attention(query, keys)
 
-    print("Query shape:", query.shape)
-    print("Keys shape:", keys.shape)
-    print("Context shape:", context.shape)
-    print("Attention weights shape:", weights.shape)
+    # print("Query shape:", query.shape)
+    # print("Keys shape:", keys.shape)
+    # print("Context shape:", context.shape)
+    # print("Attention weights shape:", weights.shape)
+     
