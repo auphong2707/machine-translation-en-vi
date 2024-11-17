@@ -127,8 +127,7 @@ class DecoderAttnRNN(nn.Module):
                 decoder_input = topi.squeeze(-1).detach()    # detach from history as input
         
         decoder_outputs = torch.cat(decoder_outputs, dim=1)
-        decoder_outputs = F.log_softmax(self.out(decoder_outputs), dim=-1)
-        print(f"Decoder outputs shape: {decoder_outputs.shape}")
+        decoder_outputs = F.log_softmax(decoder_outputs, dim=-1)
         attentions = torch.cat(attentions, dim=1)
         
         return decoder_outputs, decoder_hidden, attentions
