@@ -67,8 +67,6 @@ class BahdanauAttention(nn.Module):
         self.Va = nn.Linear(hidden_size, 1)
         
     def forward(self, query, keys):
-        # keys = keys.permute(1, 0, 2)
-        
         # query : (B, number of direction * number of layers, D)
         # keys : (B, Seq, D)
         query = query[:, :1, :].repeat(1, keys.size(1), 1)
@@ -93,7 +91,7 @@ class DecoderAttnRNN(nn.Module):
         
         self.embedding = nn.Embedding(output_size, embedding_size)
         self.attention = BahdanauAttention(hidden_size)
-        self.gru = nn.GRU(2*embedding_size, hidden_size, num_layers=num_layers, dropout=dropout_rate, batch_first=True)
+        self.gru = nn.GRU(embedding_size + hidden_size, hidden_size, num_layers=num_layers, dropout=dropout_rate, batch_first=True)
         self.out = nn.Linear(hidden_size, output_size)
         self.dropout = nn.Dropout(dropout_rate)
         
@@ -114,7 +112,6 @@ class DecoderAttnRNN(nn.Module):
             decoder_output, decoder_hidden, attn_weights = self.forward_step(
                 decoder_input, decoder_hidden, encoder_outputs
             )
-            # print(f"Decoder output shape: {decoder_output.shape}")
             decoder_outputs.append(decoder_output)
             attentions.append(attn_weights)
             
@@ -137,8 +134,6 @@ class DecoderAttnRNN(nn.Module):
         
         query = hidden.permute(1, 0, 2)
         context, attn_weights = self.attention(query, encoder_outputs)
-        # print(f"Context shape: {context.shape}")
-        # print(f"Embedded shape: {embedded.shape}")
         input_gru = torch.cat([embedded, context], dim=2)
 
         output, hidden = self.gru(input_gru, hidden)
@@ -165,9 +160,9 @@ if __name__ == "__main__":
     target_tensor = torch.randint(0, 100, (batch_size, max_seq_length), dtype=torch.long)
     
     decoder_outputs, decoder_hidden, attentions = decoder_attn(encoder_outputs, encoder_hidden, target_tensor)
+    
     print("Decoder outputs shape:", decoder_outputs.shape)
     print("Decoder hidden shape:", decoder_hidden.shape)
-   
     
     # Test BahdanauAttention
     # hidden_size = 256
