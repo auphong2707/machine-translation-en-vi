@@ -114,6 +114,7 @@ class DecoderAttnRNN(nn.Module):
             decoder_output, decoder_hidden, attn_weights = self.forward_step(
                 decoder_input, decoder_hidden, encoder_outputs
             )
+            # print(f"Decoder output shape: {decoder_output.shape}")
             decoder_outputs.append(decoder_output)
             attentions.append(attn_weights)
             
@@ -127,6 +128,7 @@ class DecoderAttnRNN(nn.Module):
         
         decoder_outputs = torch.cat(decoder_outputs, dim=1)
         decoder_outputs = F.log_softmax(self.out(decoder_outputs), dim=-1)
+        print(f"Decoder outputs shape: {decoder_outputs.shape}")
         attentions = torch.cat(attentions, dim=1)
         
         return decoder_outputs, decoder_hidden, attentions
@@ -136,8 +138,8 @@ class DecoderAttnRNN(nn.Module):
         
         query = hidden.permute(1, 0, 2)
         context, attn_weights = self.attention(query, encoder_outputs)
-        print(f"Context shape: {context.shape}")
-        print(f"Embedded shape: {embedded.shape}")
+        # print(f"Context shape: {context.shape}")
+        # print(f"Embedded shape: {embedded.shape}")
         input_gru = torch.cat([embedded, context], dim=2)
 
         output, hidden = self.gru(input_gru, hidden)
@@ -167,8 +169,6 @@ if __name__ == "__main__":
     print("Decoder outputs shape:", decoder_outputs.shape)
     print("Decoder hidden shape:", decoder_hidden.shape)
    
-    print("Attention weights shape:", attentions.shape)
-    print("Attention weights sum:", attentions.sum(dim=-1))
     
     # Test BahdanauAttention
     # hidden_size = 256
