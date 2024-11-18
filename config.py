@@ -7,7 +7,7 @@ SEED = 42                           # Random seed for reproducibility
 
 
 # [DATA PATHS]
-DATA_DIR = "data/raw/"      # Path to the dataset directory
+DATA_DIR = "data/"      # Path to the dataset directory
 TRAIN_DATA_DIR = DATA_DIR + "train_50k.csv" # Path to training data
 VAL_DATA_DIR = DATA_DIR + "val.csv"   # Path to validation data
 TEST_DATA_DIR = DATA_DIR + "test.csv"   # Path to test data
