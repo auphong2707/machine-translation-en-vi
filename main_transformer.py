@@ -38,7 +38,7 @@ def main():
     trainer.train(train_loader, val_loader, n_epochs=EPOCHS, print_every=1, plot_every=1)
 
     # Test the model
-    evaluate(experiment_name, output_lang, test_loader)
+    evaluate(experiment_name, output_lang, test_loader, model_type=Transformer, optimizer_type=torch.optim.AdamW)
     
     
     # Push to Hugging Face)
