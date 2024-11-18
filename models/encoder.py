@@ -49,11 +49,11 @@ if __name__ == "__main__":
     
     encoder = EncoderGRU(
         input_size=VOCAB_SIZE,
-        embedding_size=EMBEDDING_SIZE,
-        hidden_size=HIDDEN_SIZE,
-        num_layers=NUM_LAYERS,
-        dropout_rate=DROPOUT_RATE,
-        bidirectional=ENCODER_BIDIRECTIONAL,
+        embedding_size=RNN_EMBEDDING_SIZE,
+        hidden_size=RNN_HIDDEN_SIZE,
+        num_layers=RNN_NUM_LAYERS,
+        dropout_rate=RNN_DROPOUT_RATE,
+        bidirectional=RNN_ENCODER_BIDIRECTIONAL,
     )
 
     # Input: batch of 1 sequence, sequence length 5
