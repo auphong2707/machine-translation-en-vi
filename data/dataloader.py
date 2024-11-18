@@ -8,7 +8,7 @@ import json
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-from helper import preprocess_data_csv
+from utils.helper import preprocess_data_csv
 
 # [LANGUAGE VOCABULARY]
 class Lang:
