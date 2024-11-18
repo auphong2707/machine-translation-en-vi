@@ -1,11 +1,11 @@
-from helper import set_seed
-set_seed()
+from config import *
+from utils.helper import set_seed
+set_seed(SEED)
 
 from data.dataloader import get_dataloader
 from models.seq2seq import Seq2SeqGRU
-from trainer import Seq2SeqTrainer
-from config import *
-from tester import evaluate
+from utils.trainer import Seq2SeqTrainer
+from utils.tester import evaluate
 from huggingface_hub import HfApi, login
 import argparse
 
