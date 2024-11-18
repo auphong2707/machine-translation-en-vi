@@ -19,8 +19,8 @@ class Seq2SeqGRU(nn.Module):
                  encoder_bidirectional=ENCODER_BIDIRECTIONAL,
                  teacher_forcing_ratio=TEACHER_FORCING_RATIO,
                  max_seq_length = MAX_SEQ_LENGTH,
+                 sos_token=SOS_TOKEN,
                  device = DEVICE):
-        
         super(Seq2SeqGRU, self).__init__()
         self.input_size = input_size
         self.output_size = output_size
@@ -34,11 +34,24 @@ class Seq2SeqGRU(nn.Module):
         self.device = device
         self.max_seq_length = max_seq_length
 
-        self.encoder = EncoderGRU(input_size, embedding_size, hidden_size, num_layers, dropout_rate, encoder_bidirectional)
+        self.encoder = EncoderGRU(input_size=input_size,
+                                  embedding_size=embedding_size,
+                                  hidden_size=hidden_size,
+                                  num_layers=num_layers,
+                                  dropout_rate=dropout_rate,
+                                  bidirectional=encoder_bidirectional)
         
         decoder_hidden_size = hidden_size * 2 if encoder_bidirectional else hidden_size
-        self.decoder = DecoderGRU(embedding_size, decoder_hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio,
-                                  batch_size, max_seq_length, device)
+        self.decoder = DecoderGRU(batch_size=batch_size,
+                                  max_seq_length=max_seq_length,
+                                  num_layers=num_layers,
+                                  embedding_size=embedding_size,
+                                  hidden_size=decoder_hidden_size,
+                                  output_size=output_size,
+                                  dropout_rate=dropout_rate,
+                                  teacher_forcing_ratio=teacher_forcing_ratio,
+                                  sos_token=sos_token,
+                                  device=device)
         
         self.to(device)
 
@@ -85,11 +98,24 @@ class Seq2SeqAttn(nn.Module):
         self.device = device
         self.max_seq_length = max_seq_length
 
-        self.encoder = EncoderGRU(input_size, embedding_size, hidden_size, num_layers, dropout_rate, encoder_bidirectional)
+        self.encoder = EncoderGRU(input_size=input_size,
+                                  embedding_size=embedding_size,
+                                  hidden_size=hidden_size,
+                                  num_layers=num_layers,
+                                  dropout_rate=dropout_rate,
+                                  bidirectional=encoder_bidirectional)
         
         decoder_hidden_size = hidden_size * 2 if encoder_bidirectional else hidden_size
-        self.decoder = DecoderAttnRNN(embedding_size, decoder_hidden_size, output_size, dropout_rate, num_layers, teacher_forcing_ratio,
-                                  batch_size, max_seq_length, device)
+        self.decoder = DecoderAttnRNN(batch_size=batch_size,
+                                      max_seq_length=max_seq_length,
+                                      num_layers=num_layers,
+                                      embedding_size=embedding_size,
+                                      hidden_size=decoder_hidden_size,
+                                      output_size=output_size,
+                                      dropout_rate=dropout_rate,
+                                      teacher_forcing_ratio=teacher_forcing_ratio,
+                                      sos_token=SOS_TOKEN,
+                                      device=device)
         
         self.to(device)
         
@@ -114,7 +140,12 @@ if __name__ == "__main__":
     src = torch.randint(0, 10, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)  # (BATCH_SIZE, MAX_SEQ_LENGTH)
     trg = torch.randint(0, 10, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)  # (BATCH_SIZE, MAX_SEQ_LENGTH)
 
+    model = Seq2SeqGRU().to(DEVICE)
+    outputs = model(src, trg)
+
+    print(outputs.shape)  # Expected shape: (BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE)
+    
     model = Seq2SeqAttn().to(DEVICE)
     outputs = model(src, trg)
 
-    print(outputs.shape)  # Expected shape: (SEQ_LENGTH, BATCH_SIZE, VOCAB_SIZE)
+    print(outputs.shape)  # Expected shape: (BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE)
