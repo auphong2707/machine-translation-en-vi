@@ -4,9 +4,7 @@ import pandas as pd
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-
-sys.path.append('../machine-translation-en-vi')
-from config import *
+import torch
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*weights_only=False.*")
