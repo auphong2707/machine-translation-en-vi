@@ -7,8 +7,8 @@ import time
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-from helper import time_since, save_checkpoint, load_checkpoint, save_loss, save_plot
-from logger import setup_logger
+from utils.helper import time_since, save_checkpoint, load_checkpoint, save_loss, save_plot
+from utils.logger import setup_logger
 
 class Seq2SeqTrainer:
     def __init__(self, model, name,
@@ -16,17 +16,20 @@ class Seq2SeqTrainer:
                  device=DEVICE, 
                  criterion=nn.NLLLoss(), 
                  max_norm=1.0):
+        # [SAVE TRAINER PARAMETERS]
         self.name = name
         self.model = model.to(device)
         self.checkpoint_directory = f'results/{self.name}'
         
         self.device = device
         self.max_norm = max_norm
+        
         self.criterion = criterion
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         
         self.logger = setup_logger(self.checkpoint_directory + '/training.log')
         
+        # Prepare checkpoint directory
         self.best_loss = float('inf')
         best_checkpoint_path = os.path.join(self.checkpoint_directory, '/best.pth')
         if os.path.exists(best_checkpoint_path):
@@ -91,21 +94,21 @@ class Seq2SeqTrainer:
 
         return total_loss / len(val_dataloader)
 
-    def train(self, train_dataloader, val_dataloader, n_epochs, print_every=100, plot_every=100):
+    def train(self, train_dataloader, val_dataloader, n_epochs, print_every=1, plot_every=1):
         # Load checkpoint if available
         load_checkpoint_path = self.checkpoint_directory + '/checkpoint.pth'
-        start_epoch = load_checkpoint(self.model, self.optimizer, load_checkpoint_path)
-        if start_epoch is None:
-            start_epoch = 1
+        start_epoch = load_checkpoint(self.model, self.optimizer, load_checkpoint_path) + 1
         
         print(f"\nStart training from epoch {start_epoch}")
-        print('-' * 100)
+        print('-' * 80)
         
+        # Initialize variables
         start = time.time()
+
         train_losses = []
-        
         val_losses = []
 
+        # Training loop
         for epoch in range(start_epoch, n_epochs + 1):
             # Training step
             train_loss = self.train_epoch(train_dataloader)
@@ -127,7 +130,7 @@ class Seq2SeqTrainer:
                                  (time_since(start, epoch / n_epochs), 
                                   epoch, epoch / n_epochs * 100, 
                                   train_loss, val_loss))
-                print('-' * 100)
+                print('-' * 80)
             
             # Collect losses for plotting
             if epoch % plot_every == 0:
