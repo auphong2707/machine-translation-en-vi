@@ -64,4 +64,5 @@ LOG_INTERVAL = 50                   # Print logs every X batches
 
 # [ADDITIONAL SETTINGS]
 BEAM_WIDTH = 3                      # Beam width for beam search
-EXPERIMENT_NAME = "experiment_0"     # Name of the experiment (Change this)
+RNN_EXPERIMENT_NAME = "experiment_0"
+RNN_ATTN_EXPERIMENT_NAME = "experiment_1"

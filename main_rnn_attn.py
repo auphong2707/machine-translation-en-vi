@@ -3,7 +3,7 @@ from utils.helper import set_seed
 set_seed(SEED)
 
 from data.dataloader import get_dataloader
-from models.seq2seq import Seq2SeqGRU
+from models.seq2seq import Seq2SeqAttn
 from utils.trainer import Seq2SeqTrainer
 from utils.tester import evaluate
 from huggingface_hub import HfApi, login
@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch")
 
 def main():
     # Set name of experiment
-    experiment_name = RNN_EXPERIMENT_NAME
+    experiment_name = RNN_ATTN_EXPERIMENT_NAME
     
     # Load data
     input_lang, output_lang, (train_loader, val_loader, test_loader) = \
@@ -29,7 +29,7 @@ def main():
     output_lang.save('results/'+experiment_name+'/output_lang.pkl')
     
     # Initialize model
-    model = Seq2SeqGRU()
+    model = Seq2SeqAttn()
 
     # Initialize trainer
     trainer = Seq2SeqTrainer(model, experiment_name)
