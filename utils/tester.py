@@ -3,12 +3,12 @@ import torch.nn.functional as F
 import numpy as np
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 
+
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-
-from helper import load_checkpoint
-from models.seq2seq import Seq2SeqGRU
+from utils.helper import load_checkpoint
+from models.seq2seq import Seq2SeqGRU, Seq2SeqAttn
 
 class Beam:
     def __init__(self, model, beam_width=BEAM_WIDTH, max_seq_length=MAX_SEQ_LENGTH, device=DEVICE):
@@ -29,53 +29,103 @@ class Beam:
         return all_outputs
 
     def beam_search(self, input_tensor):
-        # Initialize the beam with a list of tuples [(sequence, score, hidden)]
-        encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
-        
-        # For bidirectional GRU, we need to combine the last hidden states
-        if self.model.encoder_bidirectional:
-            # Concatenate the final forward and backward hidden states
-            hidden_forward = encoder_hidden[0::2]
-            hidden_backward = encoder_hidden[1::2]
+        if type(self.model) == Seq2SeqGRU:
+            # Initialize the beam with a list of tuples [(sequence, score, hidden)]
+            encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
             
-            decoder_hidden = torch.cat((hidden_forward, hidden_backward), dim=-1)
-        else:
-            decoder_hidden = encoder_hidden  # Use the hidden state directly
-        
-        # Start the beam with the <sos> token and zero score
-        beams = [(torch.empty(1, 1, dtype=torch.long, device=self.device).fill_(self.model.decoder.sos_token), 0, decoder_hidden)]
-        
-        for _ in range(self.max_seq_length):
-            new_beams = []
-            for sequence, score, hidden in beams:
-                # Pass through the decoder step by step
-                output, hidden = self.model.decoder.forward_step(sequence[:, -1:], hidden)
-                log_probs = F.log_softmax(output, dim=-1).squeeze(1)
+            # For bidirectional GRU, we need to combine the last hidden states
+            if self.model.encoder_bidirectional:
+                # Concatenate the final forward and backward hidden states
+                hidden_forward = encoder_hidden[0::2]
+                hidden_backward = encoder_hidden[1::2]
                 
-                # Get top beam_width candidates
-                top_log_probs, top_indices = log_probs.topk(self.beam_width)
+                decoder_hidden = torch.cat((hidden_forward, hidden_backward), dim=-1)
+            else:
+                decoder_hidden = encoder_hidden  # Use the hidden state directly
+            
+            # Start the beam with the <sos> token and zero score
+            beams = [(0, torch.empty(1, 1, dtype=torch.long, device=self.device).fill_(self.model.decoder.sos_token), decoder_hidden)]
+            
+            for _ in range(self.max_seq_length):
+                all_candidates = []
+                for score, sequence, hidden in beams:
+                    # Skip sequences ending with <eos>
+                    if sequence[0, -1].item() == EOS_TOKEN:
+                        all_candidates.append((score, sequence, hidden))
+                        continue
+                    
+                    # Pass through the decoder step by step
+                    output, hidden = self.model.decoder.forward_step(sequence[:, -1:], hidden)
+                    log_probs = F.log_softmax(output, dim=-1).squeeze(1)
+                    
+                    # Get top beam_width candidates
+                    top_log_probs, top_indices = log_probs.topk(self.beam_width)
+                    
+                    # Create new beams with updated sequences and scores
+                    for k in range(self.beam_width):
+                        new_seq = torch.cat([sequence, top_indices[:, k].unsqueeze(1)], dim=1)
+                        new_score = score + top_log_probs[:, k].item()
+                        all_candidates.append((new_score, new_seq, hidden))
+
+                # Select the top beam_width beams
+                all_candidates.sort(key=lambda x: x[0], reverse=True)
+                beams = all_candidates[:self.beam_width]
+
+            # Return sequences from the final beams
+            final_sequences = [seq for _, seq, _ in beams]
+            return final_sequences
+        
+        elif type(self.model) == Seq2SeqAttn:
+            # Encode the input sequence
+            encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
+        
+            # For bidirectional GRU, we need to combine the last hidden states
+            if self.encoder_bidirectional:
+                # Concatenate the final forward and backward hidden states
+                hidden_forward = encoder_hidden[0::2]
+                hidden_backward = encoder_hidden[1::2]
                 
-                # Create new beams with updated sequences and scores
-                for k in range(self.beam_width):
-                    new_seq = torch.cat([sequence, top_indices[:, k].unsqueeze(1)], dim=1)
-                    new_score = score + top_log_probs[:, k].item()
-                    new_beams.append((new_seq, new_score, hidden))
+                decoder_hidden = torch.cat((hidden_forward, hidden_backward), dim=-1)
+            else:
+                decoder_hidden = encoder_hidden  # Use the hidden state directly
+                
+            # Start the beam with the <sos> token and zero score
+            beams = [(0, torch.empty(1, 1, dtype=torch.long, device=self.device).fill_(self.model.decoder.sos_token), decoder_hidden, encoder_outputs)]
+            
+            for _ in range(self.max_seq_length):
+                all_candidates = []
+                for score, sequence, hidden, enc_outputs in beams:
+                    # Skip sequences ending with <eos>
+                    if sequence[0, -1].item() == EOS_TOKEN:
+                        all_candidates.append((score, sequence, hidden))
+                        continue
+                
+                    # Pass through the decoder step by step
+                    output, hidden, _ = self.model.decoder.forward_step(sequence[:, -1:], hidden, enc_outputs)
+                    log_probs = F.log_softmax(output, dim=-1).squeeze(1)
+                    
+                    # Get top beam_width candidates
+                    top_log_probs, top_indices = log_probs.topk(self.beam_width)
+                    
+                    # Create new beams with updated sequences and scores
+                    for k in range(self.beam_width):
+                        new_seq = torch.cat([sequence, top_indices[:, k].unsqueeze(1)], dim=1)
+                        new_score = score + top_log_probs[:, k].item()
+                        all_candidates.append((new_score, new_seq, hidden, enc_outputs))
 
-            # Select the top beam_width beams
-            new_beams = sorted(new_beams, key=lambda x: x[1], reverse=True)[:self.beam_width]
-            beams = new_beams
+                # Select the top beam_width beams
+                all_candidates.sort(key=lambda x: x[0], reverse=True)
+                beams = all_candidates[:self.beam_width]
 
-        # Return sequences from the final beams
-        final_sequences = [seq for seq, _, _ in beams]
-        return final_sequences
+            # Return sequences from the final beams
+            final_sequences = [seq for _, seq, _, _ in beams]
+            return final_sequences
     
 def remove_unnecessary_tokens(sentence):
     return [word for word in sentence if word not in [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]]
     
     
-def evaluate(experiment_name, output_lang, test_loader):
-    model = Seq2SeqGRU()    
-    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+def evaluate(experiment_name, output_lang, test_loader, model, optimizer):
     load_checkpoint(model, optimizer, f'results/{experiment_name}/best.pth')
 
     model.eval()
@@ -85,7 +135,7 @@ def evaluate(experiment_name, output_lang, test_loader):
     bleu_score_best = []
     bleu_score_avg = []
     
-    for batch in test_loader:
+    for idx, batch in enumerate(test_loader):
         inputs, targets = batch
 
         outputs = beam_search.forward(inputs.to(DEVICE))
@@ -105,6 +155,8 @@ def evaluate(experiment_name, output_lang, test_loader):
                 
             bleu_score_best.append(max(sentence_bleu_score))
             bleu_score_avg.append(np.mean(sentence_bleu_score))
+            
+        print(f"Batch {idx + 1}/{len(test_loader)} completed")
     
     num_elements = len(bleu_score_best)
     
