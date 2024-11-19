@@ -61,14 +61,14 @@ def load_checkpoint(model: torch.nn.Module,
     """
     if not os.path.exists(filepath):
         print(f"Checkpoint file not found at {filepath}")
-        return None
+        return 0
     
     checkpoint = torch.load(filepath)
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
-    print(f"Checkpoint loaded from {filepath}, resuming training from epoch {epoch + 1}")
-    return epoch + 1
+    print(f"Checkpoint loaded from {filepath}, trained for {epoch} epochs")
+    return epoch
 
 def count_parameters(model: torch.nn.Module):
     """Count the number of trainable parameters in a model.
