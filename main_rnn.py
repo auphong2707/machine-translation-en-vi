@@ -35,13 +35,13 @@ def main():
     trainer = Seq2SeqTrainer(model, experiment_name)
 
     # Train the model
-    trainer.train(train_loader, val_loader, n_epochs=EPOCHS, print_every=1, plot_every=1)
+    trainer.train(train_loader, val_loader, n_epochs=EPOCHS)
 
     # Test the model
     evaluate(experiment_name, output_lang, test_loader)
     
     
-    # Push to Hugging Face)
+    # Push to Hugging Face
     login(token=args.huggingface_token)
     
     api = HfApi()
