@@ -8,7 +8,7 @@ import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
 from utils.helper import load_checkpoint
-from models.seq2seq import Seq2SeqGRU, Seq2SeqAttn
+from models.seq2seq import Seq2SeqRNN, Seq2SeqRNNAttn
 
 class Beam:
     def __init__(self, model, beam_width=BEAM_WIDTH, max_seq_length=MAX_SEQ_LENGTH, device=DEVICE):
@@ -29,7 +29,7 @@ class Beam:
         return all_outputs
 
     def beam_search(self, input_tensor):
-        if type(self.model) == Seq2SeqGRU:
+        if type(self.model) == Seq2SeqRNN:
             # Initialize the beam with a list of tuples [(sequence, score, hidden)]
             encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
             
@@ -75,7 +75,7 @@ class Beam:
             final_sequences = [seq for _, seq, _ in beams]
             return final_sequences
         
-        elif type(self.model) == Seq2SeqAttn:
+        elif type(self.model) == Seq2SeqRNNAttn:
             # Encode the input sequence
             encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
         

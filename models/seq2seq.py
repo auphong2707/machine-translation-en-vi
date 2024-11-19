@@ -7,7 +7,7 @@ from config import *
 from models.encoder import EncoderGRU
 from models.decoder import DecoderGRU, DecoderAttnRNN
 
-class Seq2SeqGRU(nn.Module):
+class Seq2SeqRNN(nn.Module):
     def __init__(self,
                  batch_size=BATCH_SIZE,
                  max_seq_length = MAX_SEQ_LENGTH,
@@ -21,7 +21,7 @@ class Seq2SeqGRU(nn.Module):
                  teacher_forcing_ratio=TEACHER_FORCING_RATIO,
                  sos_token=SOS_TOKEN,
                  device = DEVICE):
-        super(Seq2SeqGRU, self).__init__()
+        super(Seq2SeqRNN, self).__init__()
         
         # [SAVE PARAMETERS]
         self.batch_size = batch_size
@@ -86,7 +86,7 @@ class Seq2SeqGRU(nn.Module):
         # Output: (BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE)
         return decoder_outputs
     
-class Seq2SeqAttn(nn.Module):
+class Seq2SeqRNNAttn(nn.Module):
     def __init__(self,
                  batch_size=BATCH_SIZE,
                  max_seq_length = MAX_SEQ_LENGTH,
@@ -101,7 +101,7 @@ class Seq2SeqAttn(nn.Module):
                  sos_token=SOS_TOKEN,
                  device = DEVICE):
         
-        super(Seq2SeqAttn, self).__init__()
+        super(Seq2SeqRNNAttn, self).__init__()
         
         # [SAVE PARAMETERS]
         self.batch_size = batch_size
@@ -173,12 +173,12 @@ if __name__ == "__main__":
     src = torch.randint(0, 10, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)  # (BATCH_SIZE, MAX_SEQ_LENGTH)
     trg = torch.randint(0, 10, (BATCH_SIZE, MAX_SEQ_LENGTH)).to(DEVICE)  # (BATCH_SIZE, MAX_SEQ_LENGTH)
 
-    model = Seq2SeqGRU().to(DEVICE)
+    model = Seq2SeqRNN().to(DEVICE)
     outputs = model(src, trg)
 
     print(outputs.shape)  # Expected shape: (BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE)
     
-    model = Seq2SeqAttn().to(DEVICE)
+    model = Seq2SeqRNNAttn().to(DEVICE)
     outputs = model(src, trg)
 
     print(outputs.shape)  # Expected shape: (BATCH_SIZE, MAX_SEQ_LENGTH, VOCAB_SIZE)

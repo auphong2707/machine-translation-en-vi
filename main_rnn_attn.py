@@ -3,7 +3,7 @@ from utils.helper import set_seed
 set_seed(SEED)
 
 from data.dataloader import get_dataloader
-from models.seq2seq import Seq2SeqAttn
+from models.seq2seq import Seq2SeqRNNAttn
 from utils.trainer import Seq2SeqTrainer
 from utils.tester import evaluate
 from huggingface_hub import HfApi, login
@@ -29,7 +29,7 @@ def main():
     output_lang.save('results/'+experiment_name+'/output_lang.pkl')
     
     # Initialize model
-    model = Seq2SeqAttn()
+    model = Seq2SeqRNNAttn()
 
     # Initialize trainer
     trainer = Seq2SeqTrainer(model, experiment_name)
