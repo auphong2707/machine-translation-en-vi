@@ -131,7 +131,7 @@ def remove_unnecessary_tokens(sentence):
     return [word for word in sentence if word not in [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]]
     
     
-def evaluate(experiment_name, output_lang, test_loader, model, optimizer, best=True):
+def evaluate(experiment_name, test_loader, model, optimizer, best=True):
     if best:
         load_checkpoint(model, optimizer, f'results/{experiment_name}/best.pth')
     else:
@@ -151,15 +151,11 @@ def evaluate(experiment_name, output_lang, test_loader, model, optimizer, best=T
     
         for i in range(BATCH_SIZE):
             target_sentence = remove_unnecessary_tokens(targets[i].tolist())
-            target_sentence = [output_lang.get_word(token_id) for token_id in target_sentence]
-            
             
             sentence_bleu_score = []
             
             for output in outputs[i]:
                 output_sentence = remove_unnecessary_tokens(output.squeeze().tolist())
-                output_sentence = [output_lang.get_word(token_id) for token_id in output_sentence]
-                
                 sentence_bleu_score.append(sentence_bleu([target_sentence], output_sentence, smoothing_function=smoothing))
                 
             bleu_score_best.append(max(sentence_bleu_score))
