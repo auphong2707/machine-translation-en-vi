@@ -38,7 +38,7 @@ def main():
     trainer.train(train_loader, val_loader, n_epochs=EPOCHS)
 
     # Test the model
-    evaluate(experiment_name, output_lang, test_loader)
+    evaluate(experiment_name, output_lang, test_loader, model, trainer.optimizer)
     
     
     # Push to Hugging Face
