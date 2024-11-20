@@ -97,7 +97,7 @@ class Beam:
                 for score, sequence, hidden, enc_outputs in beams:
                     # Skip sequences ending with <eos>
                     if sequence[0, -1].item() == EOS_TOKEN:
-                        all_candidates.append((score, sequence, hidden))
+                        all_candidates.append((score, sequence, hidden, enc_outputs))
                         continue
                 
                     # Pass through the decoder step by step
