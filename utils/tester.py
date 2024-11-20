@@ -80,7 +80,7 @@ class Beam:
             encoder_outputs, encoder_hidden = self.model.encoder(input_tensor)
         
             # For bidirectional GRU, we need to combine the last hidden states
-            if self.encoder_bidirectional:
+            if self.model.encoder_bidirectional:
                 # Concatenate the final forward and backward hidden states
                 hidden_forward = encoder_hidden[0::2]
                 hidden_backward = encoder_hidden[1::2]
