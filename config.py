@@ -64,5 +64,6 @@ LOG_INTERVAL = 50                   # Print logs every X batches
 
 # [ADDITIONAL SETTINGS]
 BEAM_WIDTH = 3                      # Beam width for beam search
+ALPHA = 0.75                        # Length normalization factor for beam search
 RNN_EXPERIMENT_NAME = "experiment_0"
 RNN_ATTN_EXPERIMENT_NAME = "experiment_1"

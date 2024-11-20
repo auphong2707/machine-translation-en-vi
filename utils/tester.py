@@ -11,9 +11,10 @@ from utils.helper import load_checkpoint
 from models.seq2seq import Seq2SeqRNN, Seq2SeqRNNAttn
 
 class Beam:
-    def __init__(self, model, beam_width=BEAM_WIDTH, max_seq_length=MAX_SEQ_LENGTH, device=DEVICE):
+    def __init__(self, model, beam_width=BEAM_WIDTH, alpha=ALPHA, max_seq_length=MAX_SEQ_LENGTH, device=DEVICE):
         self.model = model
         self.beam_width = beam_width
+        self.alpha = alpha
         self.max_seq_length = max_seq_length
         self.device = device
 
@@ -45,15 +46,11 @@ class Beam:
             
             # Start the beam with the <sos> token and zero score
             beams = [(0, torch.empty(1, 1, dtype=torch.long, device=self.device).fill_(self.model.decoder.sos_token), decoder_hidden)]
+            final_candidates = []
             
             for _ in range(self.max_seq_length):
                 all_candidates = []
                 for score, sequence, hidden in beams:
-                    # Skip sequences ending with <eos>
-                    if sequence[0, -1].item() == EOS_TOKEN:
-                        all_candidates.append((score, sequence, hidden))
-                        continue
-                    
                     # Pass through the decoder step by step
                     output, hidden = self.model.decoder.forward_step(sequence[:, -1:], hidden)
                     log_probs = F.log_softmax(output, dim=-1).squeeze(1)
@@ -65,14 +62,20 @@ class Beam:
                     for k in range(self.beam_width):
                         new_seq = torch.cat([sequence, top_indices[:, k].unsqueeze(1)], dim=1)
                         new_score = score + top_log_probs[:, k].item()
-                        all_candidates.append((new_score, new_seq, hidden))
+                        # If the sequence ends with <eos>, add it to the final candidates
+                        if new_seq[0, -1].item() == EOS_TOKEN:
+                            final_candidates.append((new_score, new_seq))
+                        else:    
+                            all_candidates.append((new_score, new_seq, hidden))
 
                 # Select the top beam_width beams
                 all_candidates.sort(key=lambda x: x[0], reverse=True)
                 beams = all_candidates[:self.beam_width]
 
             # Return sequences from the final beams
-            final_sequences = [seq for _, seq, _ in beams]
+            normalized_candidates = [(score / (len(seq[0]) ** self.alpha), seq) for score, seq in final_candidates]
+            normalized_candidates.sort(key=lambda x: x[0], reverse=True)
+            final_sequences = [seq for _, seq in normalized_candidates[:self.beam_width]]
             return final_sequences
         
         elif type(self.model) == Seq2SeqRNNAttn:
@@ -91,15 +94,11 @@ class Beam:
                 
             # Start the beam with the <sos> token and zero score
             beams = [(0, torch.empty(1, 1, dtype=torch.long, device=self.device).fill_(self.model.decoder.sos_token), decoder_hidden, encoder_outputs)]
+            final_candidates = []
             
             for _ in range(self.max_seq_length):
                 all_candidates = []
                 for score, sequence, hidden, enc_outputs in beams:
-                    # Skip sequences ending with <eos>
-                    if sequence[0, -1].item() == EOS_TOKEN:
-                        all_candidates.append((score, sequence, hidden, enc_outputs))
-                        continue
-                
                     # Pass through the decoder step by step
                     output, hidden, _ = self.model.decoder.forward_step(sequence[:, -1:], hidden, enc_outputs)
                     log_probs = F.log_softmax(output, dim=-1).squeeze(1)
@@ -111,22 +110,32 @@ class Beam:
                     for k in range(self.beam_width):
                         new_seq = torch.cat([sequence, top_indices[:, k].unsqueeze(1)], dim=1)
                         new_score = score + top_log_probs[:, k].item()
-                        all_candidates.append((new_score, new_seq, hidden, enc_outputs))
+                        # If the sequence ends with <eos>, add it to the final candidates
+                        if new_seq[0, -1].item() == EOS_TOKEN:
+                            final_candidates.append((new_score, new_seq))
+                        else:    
+                            all_candidates.append((new_score, new_seq, hidden, enc_outputs))
 
                 # Select the top beam_width beams
                 all_candidates.sort(key=lambda x: x[0], reverse=True)
                 beams = all_candidates[:self.beam_width]
 
             # Return sequences from the final beams
-            final_sequences = [seq for _, seq, _, _ in beams]
+            normalized_candidates = [(score / (len(seq[0]) ** self.alpha), seq) for score, seq in final_candidates]
+            normalized_candidates.sort(key=lambda x: x[0], reverse=True)
+            final_sequences = [seq for _, seq in normalized_candidates[:self.beam_width]]
+            
             return final_sequences
     
 def remove_unnecessary_tokens(sentence):
     return [word for word in sentence if word not in [PAD_TOKEN, SOS_TOKEN, EOS_TOKEN]]
     
     
-def evaluate(experiment_name, output_lang, test_loader, model, optimizer):
-    load_checkpoint(model, optimizer, f'results/{experiment_name}/best.pth')
+def evaluate(experiment_name, output_lang, test_loader, model, optimizer, best=True):
+    if best:
+        load_checkpoint(model, optimizer, f'results/{experiment_name}/best.pth')
+    else:
+        load_checkpoint(model, optimizer, f'results/{experiment_name}/checkpoint.pth')
 
     model.eval()
     beam_search = Beam(model)
@@ -166,7 +175,7 @@ def evaluate(experiment_name, output_lang, test_loader, model, optimizer):
     mean_bleu_avg = np.mean(bleu_score_avg)
     variance_bleu_avg = np.var(bleu_score_avg)
 
-    with open(r"results/{}/bleu_score_stats.txt".format(experiment_name), "w") as f:
+    with open(f"results/{experiment_name}/bleu_score_stats_{'best' if best else 'last'}.txt", "w") as f:
         f.write(f"Number of elements in BLEU score array: {num_elements}\n\n")
         
         f.write(f"Mean BLEU score (best): {mean_bleu_best}\n")
