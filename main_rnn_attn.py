@@ -39,7 +39,7 @@ def main():
 
     # Test the model
     evaluate(experiment_name, output_lang, test_loader, model, trainer.optimizer)
-    
+    evaluate(experiment_name, output_lang, test_loader, model, trainer.optimizer, best=False)
     
     # Push to Hugging Face
     login(token=args.huggingface_token)
