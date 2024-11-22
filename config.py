@@ -7,7 +7,7 @@ SEED = 42                           # Random seed for reproducibility
 
 
 # [DATA PATHS]
-DATA_DIR = "data/raw/"      # Path to the dataset directory
+DATA_DIR = "data/"      # Path to the dataset directory
 TRAIN_DATA_DIR = DATA_DIR + "train_50k.csv" # Path to training data
 VAL_DATA_DIR = DATA_DIR + "val.csv"   # Path to validation data
 TEST_DATA_DIR = DATA_DIR + "test.csv"   # Path to test data
@@ -26,18 +26,27 @@ UNK_TOKEN = 3                       # Unknown token
 
 
 # [MODEL ARCHITECTURES PARAMETERS]
-EMBEDDING_SIZE = 256                # Embedding size (Change this)
-HIDDEN_SIZE = 512                   # Hidden size (Change this)
-NUM_LAYERS = 3                      # Number of RNN layers (Change this)
-DROPOUT_RATE = 0.1                  # Dropout rate (Change this)
-ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
+
+# RNN
+RNN_EMBEDDING_SIZE = 128                # Embedding size
+RNN_HIDDEN_SIZE = 128                   # Hidden size
+RNN_NUM_LAYERS = 3                      # Number of RNN layers
+RNN_DROPOUT_RATE = 0.1                  # Dropout rate
+RNN_ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
+
+# RNN with Attention
+RNN_ATTN_EMBEDDING_SIZE = 128           # Embedding size
+RNN_ATTN_HIDDEN_SIZE = 128              # Hidden size
+RNN_ATTN_NUM_LAYERS = 3                 # Number of RNN layers
+RNN_ATTN_DROPOUT_RATE = 0.1             # Dropout rate
+RNN_ATTN_ENCODER_BIDIRECTIONAL = True   # Use bidirectional encoder
 
 
 # [TRAINING PARAMETERS]
-BATCH_SIZE = 512                    # Number of samples per batch
+BATCH_SIZE = 128                    # Number of samples per batch
 EPOCHS = 50                         # Number of training epochs
 LEARNING_RATE = 0.001               # Initial learning rate
-TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder (Change this)
+TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder
 
 
 
@@ -54,5 +63,7 @@ SAVE_EVERY = 5                      # Save model every X epochs
 LOG_INTERVAL = 50                   # Print logs every X batches
 
 # [ADDITIONAL SETTINGS]
-BEAM_WIDTH = 5                      # Beam width for beam search
-EXPERIMENT_NAME = "experiment_0"     # Name of the experiment (Change this)
+BEAM_WIDTH = 3                      # Beam width for beam search
+ALPHA = 0.75                        # Length normalization factor for beam search
+RNN_EXPERIMENT_NAME = "experiment_0"
+RNN_ATTN_EXPERIMENT_NAME = "experiment_1"

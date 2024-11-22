@@ -8,7 +8,7 @@ import json
 import sys
 sys.path.append('../machine-translation-en-vi')
 from config import *
-from helper import preprocess_data_csv
+from utils.helper import preprocess_data_csv
 
 # [LANGUAGE VOCABULARY]
 class Lang:
@@ -173,6 +173,10 @@ def get_dataloader(dirs, batch_size):
         sampler = RandomSampler(data)
         dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size, drop_last=True)
         dataloaders.append(dataloader)
+        
+    dataloaders[0].shuffle = True
+    dataloaders[1].shuffle = False
+    dataloaders[2].shuffle = False
     
     return input_lang, output_lang, dataloaders
 
