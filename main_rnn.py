@@ -1,3 +1,4 @@
+import shutil
 from config import *
 from utils.helper import set_seed
 set_seed(SEED)
@@ -40,6 +41,9 @@ def main():
     # Test the model
     evaluate(experiment_name, test_loader, model, trainer.optimizer)
     evaluate(experiment_name, test_loader, model, trainer.optimizer, best=False)
+    
+    # Copy config.py to results folder
+    shutil.copyfile('config.py', 'results/'+experiment_name+'/config.py')
     
     # Push to Hugging Face
     login(token=args.huggingface_token)
