@@ -72,6 +72,9 @@ class Beam:
                 all_candidates.sort(key=lambda x: x[0], reverse=True)
                 beams = all_candidates[:self.beam_width]
 
+            # Add the final beams to the final candidates
+            final_candidates.extend([(score, seq) for score, seq, _ in beams])
+            
             # Return sequences from the final beams
             normalized_candidates = [(score / (len(seq[0]) ** self.alpha), seq) for score, seq in final_candidates]
             normalized_candidates.sort(key=lambda x: x[0], reverse=True)
@@ -120,6 +123,9 @@ class Beam:
                 all_candidates.sort(key=lambda x: x[0], reverse=True)
                 beams = all_candidates[:self.beam_width]
 
+            # Add the final beams to the final candidates
+            final_candidates.extend([(score, seq) for score, seq, _, _ in beams])
+            
             # Return sequences from the final beams
             normalized_candidates = [(score / (len(seq[0]) ** self.alpha), seq) for score, seq in final_candidates]
             normalized_candidates.sort(key=lambda x: x[0], reverse=True)
