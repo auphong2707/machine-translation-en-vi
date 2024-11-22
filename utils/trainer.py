@@ -9,6 +9,7 @@ sys.path.append('../machine-translation-en-vi')
 from config import *
 from utils.helper import time_since, save_checkpoint, load_checkpoint, save_loss, save_plot
 from utils.logger import setup_logger
+from tqdm import tqdm
 
 class Seq2SeqTrainer:
     def __init__(self, model, name,
@@ -41,7 +42,7 @@ class Seq2SeqTrainer:
         total_loss = 0
         self.model.train()  # Set model to training mode
 
-        for data in dataloader:
+        for data in tqdm(dataloader, desc="Training Epoch"):
             input_tensor, target_tensor = data
             input_tensor, target_tensor = input_tensor.to(self.device), target_tensor.to(self.device)
 
