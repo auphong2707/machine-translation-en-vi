@@ -35,10 +35,10 @@ RNN_DROPOUT_RATE = 0.1                  # Dropout rate
 RNN_ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
 
 # RNN with Attention
-RNN_ATTN_EMBEDDING_SIZE = 128           # Embedding size
-RNN_ATTN_HIDDEN_SIZE = 128              # Hidden size
+RNN_ATTN_EMBEDDING_SIZE = 256           # Embedding size
+RNN_ATTN_HIDDEN_SIZE = 256              # Hidden size
 RNN_ATTN_NUM_LAYERS = 3                 # Number of RNN layers
-RNN_ATTN_DROPOUT_RATE = 0.1             # Dropout rate
+RNN_ATTN_DROPOUT_RATE = 0.3             # Dropout rate
 RNN_ATTN_ENCODER_BIDIRECTIONAL = True   # Use bidirectional encoder
 
 
