@@ -25,9 +25,10 @@ def main():
         generation_num_beams=5,
         generation_max_length=MAX_SEQ_LENGTH,
         learning_rate=LEARNING_RATE,
-        evaluation_strategy='epoch',
+        eval_strategy='epoch',
         save_strategy='epoch',
         fp16=True,
+        report_to="none"
     )
     
     def compute_metrics_for_marinmtmodel(eval_pred):
