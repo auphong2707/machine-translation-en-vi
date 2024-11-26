@@ -1,6 +1,7 @@
 from datasets import Dataset
 import pandas as pd
 from transformers import MarianTokenizer
+from torch.utils.data import DataLoader
 
 import sys
 sys.path.append('.')
@@ -66,12 +67,19 @@ def get_dataset(dirs: str) -> Dataset:
     # Return the Dataset
     return train_dataset, val_dataset
 
-if __name__ == "__main__":
-    train_dataset, val_dataset = get_dataset([TRAIN_DATA_DIR, VAL_DATA_DIR])
-
-    print("Sample data from the training dataset:")
-    print(train_dataset[0])
+def get_dataloader(dirs: str, batch_size: int):
+    print("Creating DataLoader...\n")
+    train_dataset, val_dataset = get_dataset(dirs)
     
-    print("\nSample data from the validation dataset:")
-    print(val_dataset[0])
+    # Create DataLoader for training and validation dataset
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    
+    print("Created DataLoader successfully!\n")
+    return train_dataloader, val_dataloader, tokenizer
+
+if __name__ == "__main__":
+    train_dataloader, val_dataloader = get_dataloader(dirs=[TRAIN_DATA_DIR, VAL_DATA_DIR], batch_size=BATCH_SIZE)
+    print("Train DataLoader:", len(train_dataloader))
+    print("Validation DataLoader:", len(val_dataloader))
     
