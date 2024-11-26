@@ -43,14 +43,14 @@ def get_dataset(dirs: str) -> Dataset:
     
     # Filter out long sentences
     print("Filtering out long sentences...")
-    train_dataset = train_dataset.filter(filter_long_sentences, batch_size=len(train_dataset)//20)
-    val_dataset = val_dataset.filter(filter_long_sentences, batch_size=len(val_dataset)//20)
+    train_dataset = train_dataset.filter(filter_long_sentences)
+    val_dataset = val_dataset.filter(filter_long_sentences)
     print("Filtered dataset successfully!\n")
     
     # Apply tokenization to the dataset
     print("Tokenizing dataset...")
-    train_dataset = train_dataset.map(preprocess_function, batched=True, batch_size=len(train_dataset)//20)
-    val_dataset = val_dataset.map(preprocess_function, batched=True, batch_size=len(val_dataset)//20)
+    train_dataset = train_dataset.map(preprocess_function, batched=True)
+    val_dataset = val_dataset.map(preprocess_function, batched=True)
     print("Tokenized dataset successfully!\n")
     
     # Set the format of the dataset
