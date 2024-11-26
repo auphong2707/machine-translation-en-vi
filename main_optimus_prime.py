@@ -20,7 +20,7 @@ def main():
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,
         logging_dir="./results/" + TFM_EXPERIMENT_NAME,
-        logging_steps=1,
+        logging_steps=len(train_dataset) // BATCH_SIZE,
         predict_with_generate=True,
         generation_num_beams=5,
         generation_max_length=MAX_SEQ_LENGTH,
