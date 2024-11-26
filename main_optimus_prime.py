@@ -2,13 +2,13 @@ from config import *
 from utils.helper import set_seed
 set_seed(SEED)
 
-from data.dataloader_for_marianmt import get_dataloader
+from data.dataloader_for_marianmt import get_dataset
 from transformers import MarianMTModel, Seq2SeqTrainer, Seq2SeqTrainingArguments
 from nltk.translate.bleu_score import corpus_bleu
 
 def main():
-    # Load the training, validation, and tokenizer
-    train_dataloader, val_dataloader, tokenizer = get_dataloader(dirs=[TRAIN_DATA_DIR, VAL_DATA_DIR], batch_size=BATCH_SIZE)
+    # Load the data
+    train_dataset, val_dataset, tokenizer = get_dataset([TRAIN_DATA_DIR, VAL_DATA_DIR])
     
     # Load the model
     model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-vi")
@@ -43,8 +43,8 @@ def main():
     trainer = Seq2SeqTrainer(
         model=model,
         args=training_args,
-        train_dataset=train_dataloader,
-        eval_dataset=val_dataloader,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics_for_marinmtmodel
     )
