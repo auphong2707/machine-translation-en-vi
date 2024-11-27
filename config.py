@@ -45,7 +45,7 @@ RNN_ATTN_ENCODER_BIDIRECTIONAL = True   # Use bidirectional encoder
 # [TRAINING PARAMETERS]
 BATCH_SIZE = 128                    # Number of samples per batch
 EPOCHS = 20                         # Number of training epochs
-LEARNING_RATE = 0.001               # Initial learning rate
+LEARNING_RATE = 0.00001               # Initial learning rate
 TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder
 
 
