@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 wandb.login(key=args.wandb_token)
 
-wandb.init(project="machine-translation-en-vi", entity="auphong2707", name=TFM_EXPERIMENT_NAME)
+wandb.init(project="machine-translation-en-vi", name=TFM_EXPERIMENT_NAME)
 
 def get_last_checkpoint(output_dir):
     checkpoints = [d for d in os.listdir(output_dir) if d.startswith("checkpoint")]
