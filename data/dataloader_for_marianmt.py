@@ -26,43 +26,54 @@ def get_dataset(dirs: str) -> Dataset:
     print("Creating dataset...\n")
     
     # Load the CSV file into a DataFrame
-    train_df = pd.read_csv(dirs[0])
-    val_df = pd.read_csv(dirs[1])
+    dataframes = [pd.read_csv(dir) for dir in dirs]
     
     # Drop 'source' column
-    train_df = train_df.drop(columns=["source"])
-    val_df = val_df.drop(columns=["source"])
+    dataframes = [df.drop(columns=["source"]) for df in dataframes]
     
     # Ensure columns are named correctly
-    train_df = train_df.rename(columns={"en": "source", "vi": "target"})
-    val_df = val_df.rename(columns={"en": "source", "vi": "target"})
+    dataframes = [df.rename(columns={"en": "source", "vi": "target"}) for df in dataframes]
     
     # Convert DataFrame to Hugging Face Dataset
-    train_dataset = Dataset.from_pandas(train_df)
-    val_dataset = Dataset.from_pandas(val_df)
+    datasets = [Dataset.from_pandas(df) for df in dataframes]
     
     # Filter out long sentences
     print("Filtering out long sentences...")
-    train_dataset = train_dataset.filter(filter_long_sentences)
-    val_dataset = val_dataset.filter(filter_long_sentences)
+    datasets = [dataset.filter(filter_long_sentences) for dataset in datasets]
     print("Filtered dataset successfully!\n")
     
     # Apply tokenization to the dataset
     print("Tokenizing dataset...")
-    train_dataset = train_dataset.map(preprocess_function, batched=True)
-    val_dataset = val_dataset.map(preprocess_function, batched=True)
+    datasets = [dataset.map(preprocess_function, batched=True) for dataset in datasets]
     print("Tokenized dataset successfully!\n")
     
     # Set the format of the dataset
     print("Setting dataset format...")
-    train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
-    val_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+    train_dataset, val_dataset, test_dataset = datasets
+    train_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels'])
+    val_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels'])
+    test_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels'])
     print("Set dataset format successfully!\n")
     
     # Print information about the dataset
     print("Created dataset successfully!")
     print("Train dataset:", len(train_dataset))
-    print("Validation dataset:", len(val_dataset), '\n')
+    print("Validation dataset:", len(val_dataset))
+    print("Test dataset:", len(test_dataset))
     
     # Return the Dataset
-    return train_dataset, val_dataset, tokenizer
+    return train_dataset, val_dataset, test_dataset, tokenizer
+
+if __name__ == '__main__':
+    train_dataset, val_dataset, test_dataset, tokenizer = get_dataset([TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR])
+    for batch in DataLoader(train_dataset, batch_size=2, shuffle=True):
+        print(batch)
+        break
+    
+    for batch in DataLoader(val_dataset, batch_size=2, shuffle=True):
+        print(batch)
+        break
+    
+    for batch in DataLoader(test_dataset, batch_size=2, shuffle=True):
+        print(batch)
+        break

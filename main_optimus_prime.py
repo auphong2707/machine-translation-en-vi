@@ -1,3 +1,6 @@
+import argparse
+import os
+import shutil
 from config import *
 from utils.helper import set_seed
 set_seed(SEED)
@@ -6,12 +9,37 @@ from data.dataloader_for_marianmt import get_dataset
 from transformers import MarianMTModel, Seq2SeqTrainer, Seq2SeqTrainingArguments
 from nltk.translate.bleu_score import corpus_bleu
 
+from huggingface_hub import HfApi, login
+import wandb
+
+
+parser = argparse.ArgumentParser(description="Machine Translation Training Script")
+parser.add_argument("--huggingface_token", type=str, required=True, help="Hugging Face token for authentication")
+parser.add_argument("--wandb-token", type=str, required=True, help="Wandb token for logging")
+args = parser.parse_args()
+
+wandb.login(key=args.wandb_token)
+
+wandb.init(project="machine-translation-en-vi", entity="auphong2707", name=TFM_EXPERIMENT_NAME)
+
+def get_last_checkpoint(output_dir):
+    checkpoints = [d for d in os.listdir(output_dir) if d.startswith("checkpoint")]
+    if checkpoints:
+        last_checkpoint = sorted(checkpoints, key=lambda x: int(x.split('-')[-1]))[-1]
+        return os.path.join(output_dir, last_checkpoint)
+    return None
+
+
 def main():
     # Load the data
-    train_dataset, val_dataset, tokenizer = get_dataset([TRAIN_DATA_DIR, VAL_DATA_DIR])
+    train_dataset, val_dataset, test_dataset, tokenizer = get_dataset([TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR])
     
     # Load the model
-    model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-vi")
+    checkpoint = get_last_checkpoint(f"./results/{TFM_EXPERIMENT_NAME}")
+    if checkpoint:
+        model = MarianMTModel.from_pretrained(checkpoint)
+    else:
+        model = MarianMTModel.from_pretrained("Helsinki-NLP/opus-mt-en-vi")
     
     # Set up trainer
     training_args = Seq2SeqTrainingArguments(
@@ -28,7 +56,11 @@ def main():
         eval_strategy='epoch',
         save_strategy='epoch',
         fp16=True,
-        report_to="none"
+        save_total_limit=1,
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
+        report_to="wandb"
     )
     
     def compute_metrics_for_marinmtmodel(eval_pred):
@@ -50,11 +82,42 @@ def main():
     )
     
     # Train the model
-    trainer.train()
+    if checkpoint:
+        trainer.train(resume_from_checkpoint=checkpoint)
+    else:
+        trainer.train()
     
-    # Save the model
-    model.save_pretrained(f"./results/{TFM_EXPERIMENT_NAME}/fine_tuned_model")
-    tokenizer.save_pretrained(f"./results/{TFM_EXPERIMENT_NAME}/fine_tuned_model")
+    # Save the model and tokenizer at the end of training
+    model.save_pretrained(f"./results/{TFM_EXPERIMENT_NAME}/best_model")
+    tokenizer.save_pretrained(f"./results/{TFM_EXPERIMENT_NAME}/best_model")
+    
+    # Evaluate the model
+    # Best model is loaded automatically
+    test_result = trainer.evaluate(test_dataset)
+    with open(f"./results/{TFM_EXPERIMENT_NAME}/bleu_score_stats_best.txt", "w") as f:
+        f.write(str(test_result))
+        
+    # Last model
+    checkpoint = get_last_checkpoint(f"./results/{TFM_EXPERIMENT_NAME}")
+    model = MarianMTModel.from_pretrained(checkpoint)
+    trainer.model = model
+    test_result = trainer.evaluate(test_dataset)
+    with open(f"./results/{TFM_EXPERIMENT_NAME}/bleu_score_stats_last.txt", "w") as f:
+        f.write(str(test_result))
+    
+    # Copy config.py to results folder
+    shutil.copyfile('config.py', 'results/'+TFM_EXPERIMENT_NAME+'/config.py')
+    
+    # Push to Hugging Face
+    login(token=args.huggingface_token)
+    
+    api = HfApi()
+    api.upload_large_folder(
+        folder_path='results',
+        repo_type='model',
+        repo_id='auphong2707/machine-translation-en-vi',
+        private=True
+    )
 
     
 if __name__ == "__main__":
