@@ -35,6 +35,7 @@ def main():
     train_dataset, val_dataset, test_dataset, tokenizer = get_dataset([TRAIN_DATA_DIR, VAL_DATA_DIR, TEST_DATA_DIR])
     
     # Load the model
+    os.makedirs(f"./results/{TFM_EXPERIMENT_NAME}", exist_ok=True)
     checkpoint = get_last_checkpoint(f"./results/{TFM_EXPERIMENT_NAME}")
     if checkpoint:
         model = MarianMTModel.from_pretrained(checkpoint)
