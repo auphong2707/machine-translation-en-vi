@@ -1,0 +1,178 @@
+/* style.css */
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    font-size: 1.8rem;
+    color: #4CAF50;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.card {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    padding-top: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.model-selection h2 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.radio-option {
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-block;
+    color: #555;
+}
+
+.radio-option input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.radio-option .checkmark {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 20px;
+    background-color: #eee;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+}
+
+.radio-option input:checked ~ .checkmark {
+    background-color: #4CAF50;
+    border: none;
+}
+
+.radio-option .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    top: 6px;
+    left: 6px;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+}
+
+.radio-option input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.translation-container {
+    display: flex;
+    gap: 1rem; /* Space between the boxes */
+    flex-wrap: wrap; /* Allows wrapping for smaller screens */
+    justify-content: center; /* Centers the boxes horizontally */
+}
+
+.input-group {
+    flex: 1; /* Ensures equal size for both boxes */
+    min-width: 45%; /* Prevents the boxes from becoming too small */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+textarea {
+    width: 100%;
+    height: 200px; /* Increased height for larger boxes */
+    padding: 1rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+    background: #f9f9f9;
+    overflow: auto; /* Allows scrolling for larger content */
+}
+
+textarea:focus {
+    border-color: #4CAF50;
+}
+
+label {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: #fff;
+    padding: 0 5px;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #45A049;
+}
+
+.material-icons {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 900px) {
+    .translation-container {
+        flex-direction: column; /* Stacks the boxes vertically on medium screens */
+        gap: 1.5rem;
+    }
+
+    textarea {
+        width: 100%; /* Full width on smaller screens */
+        height: 180px; /* Slightly smaller height for better fit */
+    }
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English to Vietnamese Translator</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Translate English to Vietnamese</h1>
+        <form method="POST" class="form">
+            <div class="card model-selection">
+                <h2>Choose Translation Model:</h2>
+                <br>
+                <div class="radio-group">
+                    {% for key, value in models.items() %}
+                        <label class="radio-option">
+                            <input 
+                                type="radio" 
+                                name="model" 
+                                value="{{ key }}" 
+                                {% if selected_model == key %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            {{ value.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card translation-container">
+                <div class="input-group">
+                    <textarea id="english_text" name="english_text" required>{{ english_text }}</textarea>
+                    <label for="english_text">Enter English Text</label>
+                </div>
+                <div class="input-group">
+                    <textarea id="vietnamese_text" rows="10" readonly>{{ vietnamese_text }}</textarea>
+                    <label for="vietnamese_text">Vietnamese Translation</label>
+                </div>
+            </div>
+            <button type="submit" class="btn">
+                <span class="material-icons">translate</span> Translate
+            </button>
+        </form>
+    </div>
+</body>
+</html>
