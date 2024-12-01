@@ -35,17 +35,17 @@ RNN_DROPOUT_RATE = 0.1                  # Dropout rate
 RNN_ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
 
 # RNN with Attention
-RNN_ATTN_EMBEDDING_SIZE = 256           # Embedding size
-RNN_ATTN_HIDDEN_SIZE = 256              # Hidden size
-RNN_ATTN_NUM_LAYERS = 2                 # Number of RNN layers
+RNN_ATTN_EMBEDDING_SIZE = 512           # Embedding size
+RNN_ATTN_HIDDEN_SIZE = 512              # Hidden size
+RNN_ATTN_NUM_LAYERS = 3                 # Number of RNN layers
 RNN_ATTN_DROPOUT_RATE = 0.5             # Dropout rate
 RNN_ATTN_ENCODER_BIDIRECTIONAL = True   # Use bidirectional encoder
 
 
 # [TRAINING PARAMETERS]
 BATCH_SIZE = 128                    # Number of samples per batch
-EPOCHS = 300                        # Number of training epochs
-LEARNING_RATE = 0.0001              # Initial learning rate
+EPOCHS = 50                         # Number of training epochs
+LEARNING_RATE = 0.0004              # Initial learning rate
 TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder
 
 
@@ -66,4 +66,4 @@ LOG_INTERVAL = 50                   # Print logs every X batches
 BEAM_WIDTH = 3                      # Beam width for beam search
 ALPHA = 0.75                        # Length normalization factor for beam search
 RNN_EXPERIMENT_NAME = "experiment_0"
-RNN_ATTN_EXPERIMENT_NAME = "experiment_1_1"
+RNN_ATTN_EXPERIMENT_NAME = "experiment_1_2"
