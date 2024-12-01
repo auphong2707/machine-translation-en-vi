@@ -100,7 +100,7 @@ def main():
         
     # Last model
     checkpoint = get_last_checkpoint(f"./results/{TFM_EXPERIMENT_NAME}")
-    model = MarianMTModel.from_pretrained(checkpoint)
+    model = MarianMTModel.from_pretrained(checkpoint).to(DEVICE)
     trainer.model = model
     test_result = trainer.evaluate(test_dataset)
     with open(f"./results/{TFM_EXPERIMENT_NAME}/bleu_score_stats_last.txt", "w") as f:
