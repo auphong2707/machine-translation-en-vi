@@ -51,7 +51,7 @@ def main():
         logging_dir="./results/" + TFM_EXPERIMENT_NAME,
         logging_steps=len(train_dataset) // BATCH_SIZE,
         predict_with_generate=True,
-        generation_num_beams=5,
+        generation_num_beams=BEAM_WIDTH,
         generation_max_length=MAX_SEQ_LENGTH,
         learning_rate=LEARNING_RATE,
         eval_strategy='epoch',
