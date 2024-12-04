@@ -44,8 +44,8 @@ RNN_ATTN_ENCODER_BIDIRECTIONAL = True   # Use bidirectional encoder
 
 # [TRAINING PARAMETERS]
 BATCH_SIZE = 256                    # Number of samples per batch
-EPOCHS = 5                         # Number of training epochs
-LEARNING_RATE = 0.00001               # Initial learning rate
+EPOCHS = 50                         # Number of training epochs
+LEARNING_RATE = 0.00002               # Initial learning rate
 TEACHER_FORCING_RATIO = 0.5         # Probability of using teacher forcing in decoder
 
 
@@ -67,4 +67,4 @@ BEAM_WIDTH = 3                      # Beam width for beam search
 ALPHA = 0.75                        # Length normalization factor for beam search
 RNN_EXPERIMENT_NAME = "experiment_0"
 RNN_ATTN_EXPERIMENT_NAME = "experiment_1"
-TFM_EXPERIMENT_NAME = "experiment_2"
+TFM_EXPERIMENT_NAME = "experiment_tfm_1"
