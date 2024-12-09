@@ -16,10 +16,29 @@ MODELS = {
     },
 }
 
+# Load Transformer model and tokenizer
+def load_transformer_model():
+    """Load the Transformer model and tokenizer from the local directory."""
+    model_path = "./trained_models/transformer"
+    try:
+        tokenizer = MarianTokenizer.from_pretrained(model_path)
+        model = MarianMTModel.from_pretrained(model_path)
+        print("Transformer model and tokenizer loaded successfully.")
+        return model, tokenizer
+    except Exception as e:
+        print(f"Error loading Transformer model: {e}")
+        return None, None
+
+# Initialize the Transformer model and tokenizer
+MODELS["transformer"]["model"], MODELS["transformer"]["tokenizer"] = load_transformer_model()
+
 def translate_with_transformer(text):
     """Translate text using the Transformer."""
     tokenizer = MODELS["transformer"]["tokenizer"]
     model = MODELS["transformer"]["model"]
+    if not tokenizer or not model:
+        return "Transformer model is not loaded."
+
     tokens = tokenizer([text], return_tensors="pt", truncation=True, padding=True)
     translated = model.generate(**tokens)
     return tokenizer.decode(translated[0], skip_special_tokens=True)
