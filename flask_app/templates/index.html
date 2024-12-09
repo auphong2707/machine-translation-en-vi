@@ -7,11 +7,22 @@
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script>
+        function validateForm(event) {
+            const textArea = document.getElementById('english_text');
+            const wordCount = textArea.value.trim().split(/\s+/).length;
+            
+            if (wordCount > 50) {
+                alert("The text exceeds the 50-word limit. Please reduce the word count.");
+                event.preventDefault(); // Prevent form submission
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>🌍 Translate English to Vietnamese</h1>
-        <form method="POST" class="form">
+        <form method="POST" class="form" onsubmit="validateForm(event)">
             <div class="card model-selection">
                 <h2>Choose Translation Model:</h2>
                 <br>
