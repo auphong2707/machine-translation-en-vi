@@ -37,7 +37,7 @@ RNN_ENCODER_BIDIRECTIONAL = True        # Use bidirectional encoder
 # RNN with Attention
 RNN_ATTN_EMBEDDING_SIZE = 512           # Embedding size
 RNN_ATTN_HIDDEN_SIZE = 512              # Hidden size
-RNN_ATTN_NUM_LAYERS = 2                 # Number of RNN layers
+RNN_ATTN_NUM_LAYERS = 3                 # Number of RNN layers
 RNN_ATTN_DROPOUT_RATE = 0.5             # Dropout rate
 RNN_ATTN_ENCODER_BIDIRECTIONAL = True   # Use bidirectional encoder
 
@@ -66,4 +66,4 @@ LOG_INTERVAL = 50                   # Print logs every X batches
 BEAM_WIDTH = 3                      # Beam width for beam search
 ALPHA = 0.75                        # Length normalization factor for beam search
 RNN_EXPERIMENT_NAME = "experiment_0"
-RNN_ATTN_EXPERIMENT_NAME = "experiment_1_3"
+RNN_ATTN_EXPERIMENT_NAME = "experiment_1_2"
