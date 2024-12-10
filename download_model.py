@@ -15,6 +15,8 @@ args = parser.parse_args()
 
 # Temporary directory to store the original structure
 temp_dir = "./temp_hf_download"
+# Ensure the temporary directory exists
+Path(temp_dir).mkdir(parents=True, exist_ok=True)
 
 # Download the specified folder from the Hugging Face repository
 snapshot_download(
