@@ -122,7 +122,7 @@ After that, you need to create a new notebook on **Kaggle**, clone the repositor
 Finally, you can run the training script by running the following command:
 - For RNN:
   ```bash
-   
+  !python main_rnn.py --huggingface_token hf_token
   ```
 - For RNN with Attention Mechanism:
   ```bash
