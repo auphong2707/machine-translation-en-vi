@@ -135,6 +135,26 @@ python flask_app/app.py
 ```
 The User Interface will be available at `localhost:5000`.
 
+## Infer file
+If you want to use infer file instead of the User Interface, first you need to download the trained model from the Hugging Face model hub by running the following command:
+```bash
+python download_model.py --hf_dir model_directory_on_hf/* --local_dir ./trained_models/type_of_model
+```
+For examples, I will use transformer model:
+```bash
+python download_model.py --hf_dir experiment_2_0/best_model/* --local_dir ./trained_models/transformer
+```
+
+Then you can run the infer file by running the following command (model_type can be `rnn`, `rnn_attention`, `transformer`):
+```bash
+python infer.py --model_type model_type --text "text_to_translate"
+```
+
+For examples, I will use the transformer model:
+```bash
+python infer.py --model_type transformer --text "I am a cat"
+```
+
 # Trained models
 The trained models are available on the Hugging Face model hub: [Hugging Face model hub](https://huggingface.co/auphong2707/machine-translation-en-vi)
 
