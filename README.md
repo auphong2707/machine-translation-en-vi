@@ -99,7 +99,7 @@ After that, you need to create a new notebook on **Kaggle**, clone the repositor
 Finally, you can run the training script by running the following command:
 - For RNN:
   ```bash
-  !python main_rnn.py --huggingface_token hf_token
+   
   ```
 - For RNN with Attention Mechanism:
   ```bash
@@ -114,6 +114,7 @@ As you can see, you need the `hf_token` to store the model on the Hugging Face m
 Addtionally, for the Transformer model, you need to specify the `wandb_token` to log the training process on the Weights & Biases platform. Also, you need to change the `wandb_project` in the `config.py` file to your own project.
 
 **Our code will automatically save the model each epochs to continue training later.**
+**After training, the model will be saved in the Hugging Face**
 
 ## Download the models and User Interface
 After training the model, you can download the model from the Hugging Face model hub by running the following command:
