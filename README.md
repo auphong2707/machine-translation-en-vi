@@ -17,96 +17,6 @@ Each example contains 3 features:
 - *vi*: The corresponding Vietnamese sentence.
 - *source*: The source from which this example is taken.
 
-# Embedding
-## One-hot encoding
-**One-hot encoding** is a technique used to convert categorical data into a binary vector format, where each category is represented as a unique vector with all elements set to 0 except for the one that corresponds to the category, which is set to 1. This is commonly used in machine learning models to represent categorical variables, making them easier to process.
-
-### Example
-Suppose we have three categories: `apple`, `banana`, and `cherry`.
-
-- Assign each category an index:
-  - `apple` = 0
-  - `banana` = 1
-  - `cherry` = 2
-
-- Using **one-hot encoding**, each category is converted into a binary vector:
-  - `apple`: `[1, 0, 0]`
-  - `banana`: `[0, 1, 0]`
-  - `cherry`: `[0, 0, 1]`
-
-### Use Case
-For a dataset where the `fruit` column contains `apple`, `banana`, and `cherry`, instead of storing the text, you can use one-hot encoded vectors to represent each value. This makes the data suitable for input into machine learning algorithms that require numerical input.
-## Word2Vec
-
-**Word2Vec** is a popular algorithm used to create vector representations of words. It transforms words into dense vectors of fixed size, where semantically similar words are mapped to nearby points in the vector space. This technique captures the context of words based on their surrounding words in a sentence, making it useful for various natural language processing tasks.
-
-### How It Works
-
-Word2Vec operates using two main architectures:
-
-1. **Continuous Bag of Words (CBOW)**: This model predicts the target word based on its context (the surrounding words). For example, given the context words "The" and "sat," it predicts the target word "cat" in the sentence "The cat sat on the mat."
-
-2. **Skip-gram**: This model does the opposite of CBOW. It uses the target word to predict the context words. For instance, given the target word "cat," it aims to predict the surrounding words "The," "sat," "on," and "the."
-
-### Example
-
-Suppose we have the following sentences:
-
-- "The cat sat on the mat."
-- "Dogs are great pets."
-
-Using Word2Vec, we can generate vector representations for the words:
-
-- `cat`: `[0.12, 0.45, -0.78, ...]`
-- `dog`: `[0.34, -0.56, 0.12, ...]`
-- `great`: `[0.67, -0.14, 0.85, ...]`
-
-Each word is represented as a dense vector that captures its meaning and context relative to other words.
-
-### Use Case
-
-Word2Vec can be applied in various natural language processing tasks, such as:
-
-- **Semantic Analysis**: Understanding the meanings of words based on their context.
-- **Text Classification**: Representing words as vectors for use in classification algorithms.
-- **Recommendation Systems**: Finding similar items based on textual data.
-
-By converting words into numerical vectors, Word2Vec enables machine learning models to analyze and understand textual data more effectively.
-
-## BERT (Bidirectional Encoder Representations from Transformers)
-
-**BERT** is a state-of-the-art transformer-based model developed by Google for natural language processing (NLP) tasks. Unlike traditional models that process text in a unidirectional manner (left-to-right or right-to-left), BERT uses a bidirectional approach, allowing it to consider the full context of a word by looking at the words that come before and after it in a sentence. This results in a deeper understanding of language nuances and relationships.
-
-### How It Works
-
-BERT is pre-trained on vast amounts of text using two primary tasks:
-
-1. **Masked Language Model (MLM)**: During training, some words in the input are masked (replaced with a special token). The model learns to predict these masked words based on their context. For example, in the sentence "The cat sat on the [MASK]," the model would learn to predict "mat."
-
-2. **Next Sentence Prediction (NSP)**: This task helps the model understand the relationship between sentences. Given two sentences, BERT learns to predict whether the second sentence follows the first in the text. 
-
-### Example
-
-Suppose we have the following sentences:
-
-- Sentence 1: "The cat sat on the mat."
-- Sentence 2: "It was very comfortable."
-
-Using BERT, we can generate context-aware embeddings for each token in a sentence. For instance, the word "cat" might be represented as:
-- `cat`: `[0.23, -0.67, 0.91, ...]`
-
-The vector representation captures not just the meaning of "cat," but also its context within the sentence.
-
-### Use Case
-
-BERT can be applied in various natural language processing tasks, such as:
-
-- **Text Classification**: Categorizing documents based on their content.
-- **Question Answering**: Providing answers to questions based on context.
-- **Named Entity Recognition (NER)**: Identifying and classifying entities in text.
-
-By leveraging its bidirectional context and powerful embeddings, BERT enables significant advancements in understanding and processing human language.
-
 # Architecture
 ## RNNs
 
@@ -163,6 +73,71 @@ The **Transformer** is a revolutionary neural network architecture introduced by
 - **Scalability**: Transformers can be scaled up by adding more layers and attention heads, resulting in models like BERT and GPT that achieve state-of-the-art performance on a wide range of NLP tasks.
 
 Overall, the Transformer architecture represents a significant advancement in the field of machine translation, enabling more accurate and efficient processing of natural language.
+
+# How to use our code
+## Installation
+All of our experiments we did so far is runned on **Kaggle** environment. Therefore, we recommend you to use **Kaggle** to run our code instead of installing the `requirements.txt` file.
+
+However, if you want to run our code on your local machine, you can install the required packages by running the following command (There is a chance that you may encounter some errors due to the compatibility of the packages):
+```bash
+pip install -r requirements.txt
+```
+## Training
+To train the a model, first you need to create a branch from the `main` branch and publish it:
+```bash
+git checkout -b <branch_name>
+git push origin <branch_name>
+```
+Next step, you need to change the `config.py` file to specify the model you want to train, the dataset you want to use, the training parameters, etc. Please remember to commit and publish the changes you made to the `config.py` file.
+
+After that, you need to create a new notebook on **Kaggle**, clone the repository, switch to the branch you created by running the following commands:
+```bash
+!git clone https://github.com/auphong2707/machine-translation-en-vi.git
+%cd machine-translation-en-vi
+!git checkout <branch_name>
+```
+Finally, you can run the training script by running the following command:
+- For RNN:
+  ```bash
+  !python main_rnn.py --huggingface_token hf_token
+  ```
+- For RNN with Attention Mechanism:
+  ```bash
+  !python main_rnn_attn.py --huggingface_token hf_token
+  ```
+- For Transformer:
+  ```bash
+  !python main_optimus_prime.py --huggingface_token hf_token --wandb-token wandb_token
+  ```
+As you can see, you need the `hf_token` to store the model on the Hugging Face model hub, please also remember to change the repository in `main` file to your own repository.
+
+Addtionally, for the Transformer model, you need to specify the `wandb_token` to log the training process on the Weights & Biases platform. Also, you need to change the `wandb_project` in the `config.py` file to your own project.
+
+**Our code will automatically save the model each epochs to continue training later.**
+
+## Download the models and User Interface
+After training the model, you can download the model from the Hugging Face model hub by running the following command:
+Please remember to change the `REPO_ID` in `download_model.py` file to your own repository.
+```bash
+python download_model.py --hf_dir model_directory_on_hf/* --local_dir ./trained_models/type_of_model
+```
+For examples, I will use our trained models:
+```bash
+python download_model.py --hf_dir experiment_0_3/* --local_dir ./trained_models/rnn
+python download_model.py --hf_dir experiment_1_1/* --local_dir ./trained_models/rnn_attention
+python download_model.py --hf_dir experiment_2_0/best_model/* --local_dir ./trained_models/transformer
+```
+
+Then after that, you can run the User Interface by running the following command:
+```bash
+python flask_app/app.py
+```
+The User Interface will be available at `localhost:5000`.
+
+# Trained models
+The trained models are available on the Hugging Face model hub: [Hugging Face model hub](https://huggingface.co/auphong2707/machine-translation-en-vi)
+
+You can see so many models here. However, you will only need to focus on the models that have the following names: experiment_0_3, experiment_1_1, experiment_2_0,... (Pattern: experiment_{type_of_model}_{experiment_number}). Type of model can be `rnn`, `rnn_attention`, `transformer` correspond to 0, 1, 2 respectively.
 
 # References
 - [NLP From Scratch: Translation with a Sequence to Sequence Network and Attention](https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html)
