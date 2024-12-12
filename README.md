@@ -1,6 +1,29 @@
 # machine-translation-en-vi
 This project aims to develop a Machine Translation model that translates from English to Vietnamese using Deep Learning techniques. All content in this project is intended for the IT3320E - Introduction to Deep Learning module at Hanoi University of Science and Technology.
 
+# Table of Contents
+
+- [machine-translation-en-vi](#machine-translation-en-vi)
+- [Table of Contents](#table-of-contents)
+- [Dataset](#dataset)
+- [Architecture](#architecture)
+  - [RNNs](#rnns)
+    - [Key Features](#key-features)
+    - [Advantages](#advantages)
+  - [RNNs with Attention Mechanism](#rnns-with-attention-mechanism)
+    - [Key Features](#key-features-1)
+    - [Advantages](#advantages-1)
+  - [Transformer Architecture](#transformer-architecture)
+    - [Key Features](#key-features-2)
+    - [Advantages](#advantages-2)
+- [How to use our code](#how-to-use-our-code)
+  - [Installation](#installation)
+  - [Training](#training)
+  - [Download the models and User Interface](#download-the-models-and-user-interface)
+  - [Infer file](#infer-file)
+- [Trained models](#trained-models)
+- [References](#references)
+
 # Dataset
 Dataset: https://huggingface.co/datasets/ncduy/mt-en-vi/tree/main
 
